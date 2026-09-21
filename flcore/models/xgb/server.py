@@ -5,7 +5,7 @@ Fully Federated XGBoost - Flower Message-Based Server
 import json
 import os
 from pathlib import Path
-from typing import Tuple, Dict, List, Optional, Callable, Iterable, Any
+from typing import Tuple, Dict, List, Optional, Callable, Iterable, Any, cast
 
 import numpy as np
 import xgboost as xgb

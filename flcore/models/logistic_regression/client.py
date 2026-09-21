@@ -1,6 +1,7 @@
 
 import json
 import joblib
+import time
 import warnings
 import flwr as fl
 import numpy as np
@@ -62,13 +63,12 @@ class MnistClient(fl.client.NumPyClient):
                     self.save_model()
 
             elapsed_time = (time.time() - start_time)
-            metrics["running_time"] = elapsed_time
+            metrics = {"running_time": elapsed_time}
 
-            print(f"num_client {self.node_name} has an elapsed time {elapsed_time}")
-            print(f"Training finished for round {ins.config['server_round']}")
+            print(f"num_client {self.config['node_name']} has an elapsed time {elapsed_time}")
 
             self.round += 1
-            return utils.get_model_parameters(self.model), len(self.X_train), {}
+            return utils.get_model_parameters(self.model), len(self.X_train), metrics
         except Exception as e:
             from flcore.utils import log_detailed_error
             log_detailed_error("Model Fitting (Local Training)", e, config=self.config or config, X=getattr(self, "X_train", None), y=getattr(self, "y_train", None))

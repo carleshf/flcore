@@ -6,8 +6,12 @@
 # - Run tests with pytest
 
 
-# ubuntu-latest has 7GB RAM and 14GB SSD. macos-latest has 14GB RAM and 14GB SSD. Using macos assuming more RAM -> faster tests -> less timeouts
-# Nonetheless, our tests seem to need >10 GB RAM and >16,7 GB SSD Space. Test refactoring needed.
+# Runs on ubuntu-latest: macos-latest was tried for its larger default RAM/disk,
+# but installing this project's pinned scientific-stack dependencies (torch,
+# xgboost, scikit-survival, fpboost) is far more reliable on Linux runners --
+# some of those pins don't ship macOS wheels and fall back to slow/fragile
+# source builds. The new synthetic-fixture test suite (tests/) is also small
+# enough that the extra macOS RAM/disk headroom isn't needed.
 # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
 
 name: Build and test
@@ -22,7 +26,7 @@ jobs:
   formatting:
     outputs:
       new_sha: ${{ steps.sha.outputs.SHA }}
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -66,13 +70,12 @@ jobs:
   build:
     if: always()
     needs: formatting
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout to latest changes
       uses: actions/checkout@v3
       with:
-        ref: ${{ needs.formatting.outputs.new_sha }}
         fetch-depth: 0
 
     - name: Set up Python 3.10
@@ -90,13 +93,12 @@ jobs:
 
   lint:
     needs: build
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout to latest changes
       uses: actions/checkout@v3
       with:
-        ref: ${{ needs.formatting.outputs.new_sha }}
         fetch-depth: 0
 
     - name: Set up Python 3.10
@@ -121,13 +123,12 @@ jobs:
   
   test:
     needs: build
-    runs-on: macos-latest #windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout to latest changes
       uses: actions/checkout@v3
       with:
-        ref: ${{ needs.formatting.outputs.new_sha }}
         fetch-depth: 0
 
     - name: Set up Python 3.10

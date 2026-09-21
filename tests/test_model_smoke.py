@@ -28,18 +28,11 @@ GOLDEN_DIR = Path(__file__).parent / "golden"
 # underlying bug, this test flips to XPASS and fails until the xfail is removed --
 # that's the intended "please update this" signal, not a bug in the test.
 _XFAIL_REASONS = {
-    "logistic_regression": "flcore/models/linear_models/client.py fit() references undefined `ins` "
-    "(leftover debug print from the old Client interface, never updated for NumPyClient.fit)",
-    "linear_regression": "same linear_models/client.py `ins` NameError as logistic_regression",
     "weighted_random_forest": "flcore/models/weighted_random_forest/server.py reads nested "
     "config['weighted_random_forest'][...] keys from the old YAML config shape; "
     "server_cmd.py/client_cmd.py never produce that nested key -> KeyError",
     "xgb": "flcore/models/xgb/server.py::aggregate_bagging raises KeyError('iteration_indptr') "
     "merging a second client's trees; xgb's bagging aggregation is broken on the installed xgboost version",
-    "nn": "flcore/models/nn/client.py fit() references an uninitialized `metrics` dict "
-    "(training itself runs; only the running_time bookkeeping line crashes)",
-    "cox": "flcore/models/cox/client.py fit() calls time.time() with no `import time` in the file",
-    "gbs": "flcore/models/gbs/client.py fit() calls time.time() with no `import time` in the file",
 }
 
 

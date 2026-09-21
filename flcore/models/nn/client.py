@@ -152,13 +152,13 @@ class FlowerClient(fl.client.NumPyClient):
                 self.save_model()
 
             elapsed_time = (time.time() - start_time)
-            metrics["running_time"] = elapsed_time
+            metrics = {"running_time": elapsed_time}
 
-            print(f"num_client {self.node_name} has an elapsed time {elapsed_time}")
-            print(f"Training finished for round {ins.config['server_round']}")
+            print(f"num_client {self.config['node_name']} has an elapsed time {elapsed_time}")
+            print(f"Training finished for round {self.round}")
 
             self.round += 1
-            return self.get_parameters(config={}), dataset_len, {}
+            return self.get_parameters(config={}), dataset_len, metrics
         except Exception as e:
             from flcore.utils import log_detailed_error
             X_diag = self.X_train.cpu().numpy() if hasattr(self, 'X_train') and hasattr(self.X_train, 'cpu') else None

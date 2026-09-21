@@ -121,4 +121,9 @@ def build_validated_config(
     cfg.update(overrides)
     cfg = CheckClientConfig(cfg)
     cfg = CheckServerConfig(cfg)
+    # server_cmd.py creates this directory itself before calling
+    # GetModelServerStrategy (some strategies, e.g. linear_models, write
+    # checkpoints into it without creating it themselves) -- replicate that side
+    # effect here since this harness calls GetModelServerStrategy directly.
+    (cfg["experiment_dir"] / "checkpoints").mkdir(parents=True, exist_ok=True)
     return cfg

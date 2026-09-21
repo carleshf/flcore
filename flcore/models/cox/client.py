@@ -17,6 +17,7 @@ Usage:
 import os
 import sys
 import json
+import time
 import argparse
 import flwr as fl
 from typing import Dict
@@ -68,12 +69,12 @@ class FLClient(fl.client.NumPyClient):
                 self.save_model()
 
             elapsed_time = (time.time() - start_time)
-            metrics["running_time"] = elapsed_time
+            metrics = {"running_time": elapsed_time}
 
-            print(f"num_client {self.node_name} has an elapsed time {elapsed_time}")
-            print(f"Training finished for round {ins.config['server_round']}")
+            print(f"num_client {self.id} has an elapsed time {elapsed_time}")
+            print(f"Training finished for round {self.round}")
             self.round += 1
-            return params, num_examples, {}
+            return params, num_examples, metrics
 
         except Exception as e:
             from flcore.utils import log_detailed_error
