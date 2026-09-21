@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument("--experiment_name", type=str, default="experiment_1", help="Experiment directory")
 
     # Model specific RandomForest settings
-    parser.add_argument("--balanced", type=str, default=None, help="Random forest balanced")
+    parser.add_argument("--balanced", type=str, default="True", help="Random forest balanced")
     parser.add_argument("--n_estimators", type=int, default=100, help="Number of estimators")
     parser.add_argument("--max_depth", type=int, default=2, help="Max depth")
     parser.add_argument("--class_weight", type=str, default="balanced", help="Class weight")

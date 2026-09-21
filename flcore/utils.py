@@ -93,11 +93,11 @@ class StreamToLogger:
 
 def CheckClientConfig(config):
     # Compaibilidad de logistic regression y elastic net con sus parámetros
-    assert config["task"] in ["classification","regression","none","survival"], "Task not valid"
+    assert config["task"] is None or config["task"] in ["classification","regression","survival"], "Task not valid"
 
     if config["model"] == "logistic_regression":
-        if (config["task"] == "classification" or config["task"].lower() == "none"):
-            if config["task"].lower() == "none":
+        if (config["task"] == "classification" or config["task"] is None):
+            if config["task"] is None:
                 print("Since this model only supports classification assigning task automatically to classification")
                 config["task"] = "classification"
             if config["penalty"] == "none":
@@ -121,8 +121,8 @@ def CheckClientConfig(config):
             print("if you want to perform regression with a linear model you can change to linear_regression")
             sys.exit(1)
     elif config["model"] == "lsvc":
-        if (config["task"] == "classification"  or config["task"].lower() == "none"):
-            if config["task"].lower() == "none":
+        if (config["task"] == "classification"  or config["task"] is None):
+            if config["task"] is None:
                 print("Since this model only supports classification assigning task automatically to classification")
             pass
             # verificar variables
@@ -134,8 +134,8 @@ def CheckClientConfig(config):
             print("The nature of the selected ML model does not allow to perform classification")
             print("if you want to perform classification with a linear model you can change to logistic_regression")
             sys.exit(1)
-        elif (config["task"] == "regression"  or config["task"].lower() == "none"):
-            if config["task"].lower() == "none":
+        elif (config["task"] == "regression"  or config["task"] is None):
+            if config["task"] is None:
                 print("Since this model only supports regression assigning task automatically to regression")
 
             if config["model"] == "lasso_regression":
@@ -153,8 +153,8 @@ def CheckClientConfig(config):
                     print("with more than a couple of 10000 samples. Changing kernel for linear")
                     config["kernel"] = "linear"
     elif config["model"] == "logistic_regression_elasticnet":
-        if (config["task"] == "classification"  or config["task"].lower() == "none"):
-            if config["task"].lower() == "none":
+        if (config["task"] == "classification"  or config["task"] is None):
+            if config["task"] is None:
                 print("Since this model only supports classification assigning task automatically to classification")
 
             config["model"] = "logistic_regression"
@@ -288,9 +288,9 @@ def CheckClientConfig(config):
 
 # CUANDO SURVIVAL MODEL TASK NO ES NECESAIRO
 
-    if config["task"].lower() == "none":
+    if config["task"] is None:
         print("Task not assigned. The  ML model  selection requieres a task to perform")
-        sys.exit(1)  
+        sys.exit(1)
 
     if config["penalty"] != "none":
         valid_values = ["l1", "l2"]

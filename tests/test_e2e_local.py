@@ -46,10 +46,9 @@ def test_random_forest_e2e_local(tmp_path):
         "--local_port", port,
         "--production_mode", "False",
         "--dropout_method", "None",
-        # server_cmd.py's --balanced defaults to None, which fails CheckServerConfig's
-        # isinstance(..., str) check -- see CLAUDE.md Sec 4.2 (server/client default
-        # mismatch); pass it explicitly until Phase 1 fixes the default.
-        "--balanced", "True",
+        # deliberately no --balanced: exercises server_cmd.py's default (fixed in
+        # Phase 1 item 1 to match client_cmd.py's "True" -- it used to be None,
+        # which failed CheckServerConfig's isinstance(..., str) check).
     ]
     client_cmd = [
         sys.executable,

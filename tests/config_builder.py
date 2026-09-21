@@ -6,12 +6,13 @@ both a Client and a Strategy in one process needs ONE dict that satisfies both
 flcore.utils.CheckClientConfig and flcore.utils.CheckServerConfig, so this module
 merges the two CLI surfaces' defaults.
 
-Where the two entry points currently disagree on a default (see CLAUDE.md "Known
-issues" -- e.g. `balanced` defaults to `None` server-side vs `"True"` client-side,
-or `dropout_method` defaults to Python `None` while the disabling check compares
-against the *string* `"None"`, silently enabling dropout by default), this picks
-one explicit, intended value rather than relying on either default. This is the
-kind of drift Phase 1 (argument standardization) is meant to fix at the source.
+`task`/`balanced`/`model` no longer disagree between server_cmd.py and
+client_cmd.py (both now default to `None`/`None`/`"True"` respectively). One
+mismatch of the same shape remains -- `dropout_method` defaults to Python `None`
+while the disabling check in FedCustomAggregator.configure_fit compares against
+the *string* `"None"`, silently enabling dropout by default -- so this still
+picks an explicit, intended value for that one rather than relying on the
+default.
 """
 from pathlib import Path
 from typing import Optional

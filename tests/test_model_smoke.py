@@ -22,8 +22,8 @@ from fed_driver import run_federated_rounds
 GOLDEN_DIR = Path(__file__).parent / "golden"
 
 # Known-broken model configs as of this session's run against the synthetic
-# fixture (see CLAUDE.md Sec 5.3) -- xfail'd (strict=True) rather than left red so
-# a genuine regression in a *passing* model still fails the suite, while these
+# fixture -- xfail'd (strict=True) rather than left red so a genuine regression
+# in a *passing* model still fails the suite, while these
 # stay visible and self-documenting. strict=True means the day someone fixes the
 # underlying bug, this test flips to XPASS and fails until the xfail is removed --
 # that's the intended "please update this" signal, not a bug in the test.

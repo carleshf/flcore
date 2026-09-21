@@ -42,10 +42,10 @@ if __name__ == "__main__":
     parser.add_argument("--num_clients", type=int, default=1, help="Number of clients") # shouldnt exist here
 
     # General variables model related
-    parser.add_argument("--model", type=str, default="random_forest", help="Model to train")
+    parser.add_argument("--model", type=str, default=None, help="Model to train")
     parser.add_argument("--n_feats", type=int, default=0, help="Number of input features")
     parser.add_argument("--n_out", type=int, default=0, help="Number of output features")
-    parser.add_argument("--task", type=str, default="None", help="Task to perform (classification, regression)")
+    parser.add_argument("--task", type=str, default=None, help="Task to perform (classification, regression)")
     parser.add_argument("--device", type=str, default="cpu", help="Device for training, CPU, GPU")
     parser.add_argument("--local_epochs", type=int, default=10, help="Number of local epochs to train in each round")
     parser.add_argument("--batch_size", type=int, default=8, help="Batch size to train")
