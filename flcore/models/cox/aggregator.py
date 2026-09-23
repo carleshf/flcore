@@ -7,7 +7,7 @@
 
 from typing import List
 import numpy as np
-from flcore.models.cox.base_aggregator import BaseAggregator
+from flcore.base_aggregator import BaseAggregator
 
 # --- CoxPH Aggregator ---
 

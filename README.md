@@ -2,7 +2,7 @@
 Library of Federated Learning models integrated within the DataTools4Heart project.
 
 <!-- ![CI status](https://gitlab.bsc.es/fl/flcore/badges/main/pipeline.svg) -->
-![Continuous integration](https://github.com/DataTools4Heart/flcore/actions/workflows/python-ci.yml/badge.svg)
+![Continuous integration](https://github.com/carleshf/flcore/actions/workflows/python-ci.yml/badge.svg)
 
 ## Currently implemented models
 | Model | Aggregation method | Alias | Link |

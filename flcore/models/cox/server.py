@@ -13,12 +13,14 @@ import logging
 import hashlib
 import flwr as fl
 from flwr.common.logger import log
+from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays
 from typing import List, Optional, Tuple, Union, Dict
 # from flwr import weighted_loss_avg
 
 import numpy as np
 import pickle, json
 
+from flcore.base_strategy import BaseFLStrategy
 from flcore.models.cox.model import CoxPHModel
 from flcore.models.cox.aggregator import CoxAggregator
 
@@ -29,9 +31,14 @@ logger = logging.getLogger(__name__)
 # Custom FedAvg Strategy
 # -------------------------------
 
-class CustomStrategy(fl.server.strategy.FedAvg):
+class CustomStrategy(BaseFLStrategy):
     def __init__(self, l1_penalty: float, rounds: int, saving_path :str = '/sandbox/', **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(
+            aggregator_cls=CoxAggregator,
+            serialize_fn=ndarrays_to_parameters,
+            deserialize_fn=parameters_to_ndarrays,
+            **kwargs,
+        )
         self.rounds = rounds
         self.results_history = {}
         self.saving_path = saving_path
@@ -41,50 +48,31 @@ class CustomStrategy(fl.server.strategy.FedAvg):
         """Save the results history to a file."""
         with open(f"{self.saving_path}/history.json", "w") as f:
             json.dump(self.results_history, f)
-        
-    def aggregate_fit(self, rnd: int, results, failures):
-        """
-        results: list of (ClientProxy, FitRes)
-        """
-        if not results:
+
+    def aggregate_fit(self, server_round: int, results, failures):
+        """Reuses BaseFLStrategy's merge (deserialize -> weight -> CoxAggregator ->
+        re-serialize); adds cox's own "save the global model on the last round"
+        side effect, which needs the post-merge params BaseFLStrategy computed."""
+        parameters, metrics = super().aggregate_fit(server_round, results, failures)
+        if parameters is None:
             return None, {}
 
-        models = []
-        weights = []
-
-        for _, fit_res in results:
-            # Convert Flower parameters to numpy arrays
-            params_list = fl.common.parameters_to_ndarrays(fit_res.parameters)
-            # Ensure each ndarray is converted back to bytes for legacy aggregators
-
-            models.append(params_list)
-            weights.append(fit_res.num_examples)
-
-        # Select aggregator
-        AggregatorCls = CoxAggregator
-
-        aggregator = CoxAggregator(models=models, weights=weights)
-        aggregated_params = aggregator.aggregate()
-        
-        # Convert aggregated model back to Flower parameters
-        parameters = fl.common.ndarrays_to_parameters(aggregated_params)
-        
-
-         # --- SAVE GLOBAL MODEL AFTER LAST ROUND ---
-        if rnd == self.rounds:
+        # --- SAVE GLOBAL MODEL AFTER LAST ROUND ---
+        if server_round == self.rounds:
+            aggregated_params = parameters_to_ndarrays(parameters)
             print(aggregated_params)
             model = CoxPHModel()
             model.set_parameters(aggregated_params)
             os.makedirs(f"{self.saving_path}/models/", exist_ok=True)
             with open(f"{self.saving_path}/models/cox.pkl", "wb") as f:
                 pickle.dump(model, f)
-            
+
             model_bytes = pickle.dumps(CoxPHModel)
             model_md5 = hashlib.md5(model_bytes).hexdigest()
             self.results_history['MODEL_MD5'] = model_md5
 
-        return parameters, {}
-    
+        return parameters, metrics
+
     def aggregate_evaluate(
         self,
         server_round: int,
@@ -152,6 +140,7 @@ def get_server_and_strategy(
 
     server = fl.server.Server
     strategy = CustomStrategy(
+        config=config,
         on_fit_config_fn=get_fit_config_fn(config['l1_penalty']),
         rounds = config['num_rounds'],
         min_fit_clients = config["min_fit_clients"],

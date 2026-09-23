@@ -5,7 +5,7 @@
 # Project: AI4HF
 # ********* * * * * *  *  *   *   *    *   *  *  *  * * * * *
 
-from flcore.models.rsf.base_aggregator import BaseAggregator
+from flcore.base_aggregator import BaseAggregator
 
 class RSFAggregator(BaseAggregator):
     """

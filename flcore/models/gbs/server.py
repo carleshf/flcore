@@ -20,7 +20,7 @@ import pickle, json
 
 from flcore.models.gbs.model import GBSModel
 from flcore.models.gbs.aggregator import GBSAggregator
-from flcore.models.gbs.base_aggregator import BaseAggregator
+from flcore.base_aggregator import BaseAggregator
 
 
 logger = logging.getLogger(__name__)

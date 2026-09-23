@@ -20,7 +20,7 @@ import pickle, json
 
 from flcore.models.rsf.model import RSFModel
 from flcore.models.rsf.aggregator import RSFAggregator
-from flcore.models.rsf.base_aggregator import BaseAggregator
+from flcore.base_aggregator import BaseAggregator
 
 
 logger = logging.getLogger(__name__)

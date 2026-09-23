@@ -6,7 +6,7 @@
 # ********* * * * * *  *  *   *   *    *   *  *  *  * * * * *
 
 import pickle
-from flcore.models.gbs.base_aggregator import BaseAggregator
+from flcore.base_aggregator import BaseAggregator
 
 class GBSAggregator(BaseAggregator):
     """
