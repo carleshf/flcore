@@ -142,7 +142,8 @@ def get_server_and_strategy(config):
 
     # Pass parameters to the Strategy for server-side parameter initialization
     #strategy = fl.server.strategy.FedAvg(
-    strategy = FedCustom(   
+    strategy = FedCustom(
+        config = config,
         #Have running the same number of clients otherwise it does not run the federated
         min_available_clients = config['min_available_clients'],
         min_fit_clients = config['min_fit_clients'],
@@ -156,11 +157,6 @@ def get_server_and_strategy(config):
         evaluate_metrics_aggregation_fn = metrics_aggregation_fn,
         on_fit_config_fn = fit_round,
         checkpoint_dir = config["experiment_dir"] / "checkpoints",
-        dropout_method = config['dropout_method'],
-        percentage_drop = config['dropout_percentage'],
-        smoothing_method = config['smooth_method'],
-        smoothing_strenght = config['smoothing_strenght']
-        # ·································································
     )
 
     return None, strategy
