@@ -48,6 +48,7 @@ if __name__ == "__main__":
         os._exit(1)
 
     # Create sandbox log file path
+    Path(config["sandbox_path"]).mkdir(parents=True, exist_ok=True)
     sandbox_log_file = Path(os.path.join(config["sandbox_path"], "log_client.txt"))
 
     # Set up the file handler (writes to file)
@@ -86,41 +87,25 @@ if __name__ == "__main__":
     # Now you can use logging in both places
     logging.info("Starting Flower client...")
 
-#### PODRIAMOS QUITAR ESTO DE PRODUCTION MODE; NO TIENE NINGUN SENTIDO
     #model = config["model"]
-    if config["production_mode"] == "True":
+    if not config["testing_mode"]:
         node_name = os.getenv("NODE_NAME")
-#        num_client = int(node_name.split("_")[-1])
         data_path = os.getenv("DATA_PATH")
-        ca_cert = Path(os.path.join(config["certs_path"],"rootCA_cert.pem"))
-        root_certificate = Path(f"{ca_cert}").read_bytes()
-#        root_certificate = ca_cert
-#        root_certificate =( Path(os.path.join(config["certs_path"],"rootCA_cert.pem")).read_bytes(),
-#            Path(os.path.join(config["certs_path"],"rootCA_cert.pem")).read_bytes(),
-#            Path(os.path.join(config["certs_path"],"rootCA_key.pem")).read_bytes() )
-
-        root_cert = Path(os.path.join(config["certs_path"],"rootCA_cert.pem")).read_bytes()
-        client_cert = Path(os.path.join(config["certs_path"],config["node_name"]+"_client_cert.pem")).read_bytes()
-        client_key = Path(os.path.join(config["certs_path"],config["node_name"]+"_client_key.pem")).read_bytes()
-
-        #ssl_credentials = grpc.ssl_channel_credentials(
-        #    root_certificates=root_cert,  # Certificado raíz del servidor
-        #    private_key=client_key,  # Clave privada del cliente
-        #    certificate_chain=client_cert  # Certificado del cliente
-        #)
-
         central_ip = os.getenv("FLOWER_CENTRAL_SERVER_IP")
         central_port = os.getenv("FLOWER_CENTRAL_SERVER_PORT")
-        #channel = grpc.secure_channel(f"{central_ip}:{central_port}", ssl_credentials)
-
     else:
         data_path = config["data_path"]
-        root_certificate = None
         central_ip = "LOCALHOST"
         central_port = config["local_port"]
-#        if len(sys.argv) == 1:
-#            raise ValueError("Please provide the client id when running in simulation mode")
-#        num_client = int(sys.argv[1])
+
+    if config["enable_certs"]:
+        ca_cert = Path(os.path.join(config["certs_path"], "rootCA_cert.pem"))
+        if not ca_cert.exists():
+            print(f"--enable_certs was passed but {ca_cert} does not exist")
+            os._exit(1)
+        root_certificate = ca_cert.read_bytes()
+    else:
+        root_certificate = None
 
 # *******************************************************************************************
 # Aquí lo correcto es cargar todo como instancias de dataloader de torch

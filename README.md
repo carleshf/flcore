@@ -20,34 +20,23 @@ Install necessary dependencies:
 ```
 pip install -r requirements.txt
 ```
-To start a federated training run:
+Every parameter is passed as a CLI flag (no config file) — start a server and one client per data
+center as separate processes:
 ```
-python run.py
-```
-it will automatically start a server and client processes defined in `config.yaml`
+python server_cmd.py --model random_forest --task classification --num_rounds 3 \
+    --num_clients 1 --sandbox_path ./sandbox --testing_mode
 
-### Step by step
-Also, you can do it manually by running:
+python client_cmd.py --model random_forest --task classification \
+    --train_labels <feature columns...> --target_labels <target column> \
+    --sandbox_path ./sandbox --testing_mode \
+    --data_id /path/to/dataset_dir   # a directory containing *.parquet + metadata.json
 ```
-python server.py
-```
-And then, preferably in a separate shell window for clean output, start clients with their corresponding ids:
-```
-python client.py 1
-```
-```
-python client.py 2
-```
+See `tutorial.md` for the full CLI argument reference and `pruebas.md` for one ready-to-run
+command pair per supported model.
 
-## Configuration file
-The federated training parameters are defined in ```config.yaml```
-The most important parameters are:
- - `num_clients` (number of clients needed in a federated training)
- - `num_rounds` (number of training rounds)
- - `model` (machine learning model with it's federated implementation)
-
- ## Data loader
-To train on your own dataset add a loading method in the `datasets.py` file and a corresponding entry in the `load_dataset()` method.
+## Data loader
+To train on your own dataset add a loading method in `flcore/datasets.py` and a corresponding entry
+in the `load_dataset()` method.
 
 #### Loading method
  ```python
@@ -59,7 +48,7 @@ To train on your own dataset add a loading method in the `datasets.py` file and 
 
  #### Note
  It is important to note that each client can only use it's subset of data corresponding to it's institution. When deployed in a real federated setting,
- each client will access the available data through the provided `data_path` in `config.yaml` file. To enable this behaviour in simulated setting,
+ each client will access the available data through the `--data_path`/`--data_id` CLI flag. To enable this behaviour in simulated setting,
  a dataset loading method should accept `center_id` argument in order to load only a specific part of a dataset and simulate distributed data scheme.
 
 
@@ -84,6 +73,9 @@ To train on your own dataset add a loading method in the `datasets.py` file and 
 After implementing the necessary methods follow the remaining steps:
 1. Create a new branch in `flcore` repository
 2. Copy your model package to `flcore/models` directory
-3. Add cases for the new model in `server_selector.py` and `client_selector.py` modules in `flcore/` directory
-4. Add the model to the available models table in `README.md` file
-5. Open a Pull Request and wait for review
+3. Add cases for the new model in `GetModelServerStrategy` and `GetModelClient` in `flcore/utils.py`
+4. Add the model's own CLI flags (if any) as a new `add_<model>_args(parser)` group in
+   `flcore/cli_args.py`, and register which entry point(s)/other models need it in
+   `SERVER_MODEL_GROUPS`/`CLIENT_MODEL_GROUPS`
+5. Add the model to the available models table in `README.md` file
+6. Open a Pull Request and wait for review

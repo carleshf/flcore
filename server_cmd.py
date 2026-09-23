@@ -45,6 +45,7 @@ if __name__ == "__main__":
 # Originalmente estaba asi:
 #    sandbox_log_file = Path(os.path.join("/sandbox", "log_server.txt"))
 # Modificado
+    Path(config["sandbox_path"]).mkdir(parents=True, exist_ok=True)
     sandbox_log_file = Path(os.path.join(config["sandbox_path"], "log_server.txt"))
 
     # Set up the file handler (writes to file)
@@ -84,27 +85,29 @@ if __name__ == "__main__":
     # Now you can use logging in both places
     logging.info("Starting Flower server...")
 
-    if config["production_mode"] == "True":
+    if not config["testing_mode"]:
         #data_path = ""
         central_ip = os.getenv("FLOWER_CENTRAL_SERVER_IP")
         central_port = os.getenv("FLOWER_CENTRAL_SERVER_PORT")
-
-        ca_cert = Path(os.path.join("/certs","rootCA_cert.pem"))
-        server_cert =  Path(os.path.join("/certs","server_cert.pem"))
-        server_key =  Path(os.path.join("/certs","server_key.pem"))
-
-        certificates = (
-            Path(f"{ca_cert}").read_bytes(),
-            Path(f"{server_cert}").read_bytes(),
-            Path(f"{server_key}").read_bytes(),
-        )
-#            Path('.cache/certificates/rootCA_cert.pem').read_bytes(),
-#            Path('.cache/certificates/server_cert.pem').read_bytes(),
-#            Path('.cache/certificates/server_key.pem').read_bytes(),
     else:
         #data_path = config["data_path"]
         central_ip = "LOCALHOST"
         central_port = config["local_port"]
+
+    if config["enable_certs"]:
+        ca_cert = Path(os.path.join("/certs", "rootCA_cert.pem"))
+        server_cert = Path(os.path.join("/certs", "server_cert.pem"))
+        server_key = Path(os.path.join("/certs", "server_key.pem"))
+        for cert_path in (ca_cert, server_cert, server_key):
+            if not cert_path.exists():
+                print(f"--enable_certs was passed but {cert_path} does not exist")
+                os._exit(1)
+        certificates = (
+            ca_cert.read_bytes(),
+            server_cert.read_bytes(),
+            server_key.read_bytes(),
+        )
+    else:
         certificates = None
 
 

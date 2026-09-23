@@ -20,10 +20,23 @@ def add_common_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--seed", type=int, default=42, help="Seed")
     parser.add_argument("--sandbox_path", type=str, default="/sandbox", help="Sandbox path to use")
     parser.add_argument("--local_port", type=int, default=8081, help="Local port")
-    parser.add_argument("--production_mode", type=str, default="True", help="Production mode")
+    parser.add_argument(
+        "--testing_mode",
+        action="store_true",
+        help="Connect via LOCALHOST/--local_port instead of production env vars "
+        "(FLOWER_CENTRAL_SERVER_IP/PORT, DATA_PATH, NODE_NAME). A real bool, not a string -- pass "
+        "the flag to enable, omit it for production (the default). Independent of --enable_certs.",
+    )
+    parser.add_argument(
+        "--enable_certs",
+        action="store_true",
+        help="Require and load TLS certificates (server: /certs; client: --certs_path). Independent "
+        "of --testing_mode -- omit to skip TLS entirely (the default); when passed, missing cert "
+        "files are a fatal error rather than silently proceeding without TLS.",
+    )
     parser.add_argument("--experiment_name", type=str, default="experiment_1", help="Experiment directory")
     # Recomputed by CheckClientConfig from metadata.json; kept as real CLI args on
-    # both entry points for parity with production_mode-less local debugging.
+    # both entry points for parity with local debugging.
     parser.add_argument("--n_feats", type=int, default=0, help="Number of input features")
     parser.add_argument("--n_out", type=int, default=0, help="Number of output features")
 

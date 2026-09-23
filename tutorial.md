@@ -7,7 +7,8 @@
 | `--sandbox_path`    | str  | "/sandbox"     | Path to the client sandbox                 |
 | `--certs_path`      | str  | "/certs"       | Path to SSL certificates                   |
 | `--data_path`       | str  | "/data"        | Path to the dataset                        |
-| `--production_mode` | str  | "True"         | Enable production mode (minimal logs)      |
+| `--testing_mode`    | flag | absent (production) | Present = connect via LOCALHOST/--local_port; absent = production env vars (FLOWER_CENTRAL_SERVER_IP/PORT, DATA_PATH, NODE_NAME) |
+| `--enable_certs`    | flag | absent (no TLS) | Present = require + load TLS certs (fatal error if missing); absent = no TLS. Independent of `--testing_mode` |
 | `--experiment_name` | str  | "experiment_1" | Folder to store experiment outputs         |
 2. Dataset Variables
 
@@ -102,7 +103,8 @@ Survival
 | `--seed`                  | int  | 42         | Random seed                                    |
 | `--sandbox_path`          | str  | "/sandbox" | Path to sandbox directory                      |
 | `--local_port`            | int  | 8081       | Server listening port                          |
-| `--production_mode`       | str  | "True"     | Production mode (minimal logs)                 |
+| `--testing_mode`          | flag | absent (production) | Present = connect via LOCALHOST/--local_port; absent = production env vars |
+| `--enable_certs`          | flag | absent (no TLS) | Present = require + load TLS certs from `/certs` (fatal error if missing); absent = no TLS |
 
 2. Strategy Settings
 

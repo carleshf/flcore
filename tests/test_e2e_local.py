@@ -1,8 +1,8 @@
 """One true end-to-end smoke test: spawns real server_cmd.py + client_cmd.py
-subprocesses talking over a real localhost socket (--production_mode False, no
-certs), mirroring one command pair from pruebas.md, against the synthetic
-fixture. Complements test_model_smoke.py's in-process tests with a real
-process/socket check that the CLI entry points themselves still work end to end.
+subprocesses talking over a real localhost socket (--testing_mode, no certs),
+mirroring one command pair from pruebas.md, against the synthetic fixture.
+Complements test_model_smoke.py's in-process tests with a real process/socket
+check that the CLI entry points themselves still work end to end.
 """
 import subprocess
 import sys
@@ -44,7 +44,7 @@ def test_random_forest_e2e_local(tmp_path):
         "--sandbox_path", str(sandbox),
         "--experiment_name", experiment_name,
         "--local_port", port,
-        "--production_mode", "False",
+        "--testing_mode",
         "--dropout_method", "None",
         # deliberately no --balanced: exercises server_cmd.py's default (fixed in
         # Phase 1 item 1 to match client_cmd.py's "True" -- it used to be None,
@@ -60,7 +60,7 @@ def test_random_forest_e2e_local(tmp_path):
         "--sandbox_path", str(sandbox),
         "--experiment_name", experiment_name,
         "--local_port", port,
-        "--production_mode", "False",
+        "--testing_mode",
         "--data_id", data_info["data_dir"],
     ]
 
