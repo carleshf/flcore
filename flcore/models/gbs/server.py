@@ -20,16 +20,38 @@ import pickle, json
 
 from flcore.models.gbs.model import GBSModel
 from flcore.models.gbs.aggregator import GBSAggregator
-from flcore.base_aggregator import BaseAggregator
+from flcore.base_strategy import BaseFLStrategy
 
 
 logger = logging.getLogger(__name__)
 
 
-class CustomStrategy(fl.server.strategy.FedAvg):
+def _gbs_deserialize(parameters):
+    """gbs's own quirk (preserved as-is, identical to rsf's): each client
+    ndarray gets flattened to raw bytes before the aggregator sees it --
+    GBSAggregator.aggregate() unpickles client_params[0] directly, it never
+    reads BaseFLStrategy's computed weights, so this migration is
+    behavior-preserving regardless of smoothing settings, not just with
+    smoothing off."""
+    params_list = fl.common.parameters_to_ndarrays(parameters)
+    params_as_bytes = []
+    for p in params_list:
+        if isinstance(p, np.ndarray):
+            params_as_bytes.append(p.tobytes())
+        else:
+            params_as_bytes.append(p)
+    return params_as_bytes
+
+
+class CustomStrategy(BaseFLStrategy):
     def __init__(self, rounds: int, saving_path :str = '/sandbox/', **kwargs):
-        super().__init__(**kwargs)
-        self.rounds = round
+        super().__init__(
+            aggregator_cls=GBSAggregator,
+            serialize_fn=fl.common.ndarrays_to_parameters,
+            deserialize_fn=_gbs_deserialize,
+            **kwargs,
+        )
+        self.rounds = rounds
         self.results_history = {}
         self.saving_path = saving_path
 
@@ -38,53 +60,30 @@ class CustomStrategy(fl.server.strategy.FedAvg):
         with open(f"{self.saving_path}/history.json", "w") as f:
             json.dump(self.results_history, f)
 
-    def aggregate_fit(self, rnd: int, results, failures):
-        """
-        results: list of (ClientProxy, FitRes)
-        """
-        if not results:
+    def aggregate_fit(self, server_round: int, results, failures):
+        """Reuses BaseFLStrategy's merge; adds gbs's own "save the global model
+        on the last round" side effect using the post-merge params
+        super().aggregate_fit() already computed."""
+        parameters, metrics = super().aggregate_fit(server_round, results, failures)
+        if parameters is None:
             return None, {}
 
-        models = []
-        weights = []
-
-        for _, fit_res in results:
-            # Convert Flower parameters to numpy arrays
-            params_list = fl.common.parameters_to_ndarrays(fit_res.parameters)
-            # Ensure each ndarray is converted back to bytes for legacy aggregators
-
-            params_as_bytes = []
-            for p in params_list:
-                if isinstance(p, np.ndarray):
-                    b = p.tobytes()
-                    params_as_bytes.append(b)
-                else:
-                    params_as_bytes.append(p)
-            models.append(params_as_bytes)
-            
-            weights.append(fit_res.num_examples)
-
-        aggregator: BaseAggregator = GBSAggregator(models=models, weights=weights)
-        aggregated_params = aggregator.aggregate()
-        
-        # Convert aggregated model back to Flower parameters
-        parameters = fl.common.ndarrays_to_parameters(aggregated_params)
-        
         # --- SAVE GLOBAL MODEL AFTER LAST ROUND ---
-        if rnd == self.rounds:
+        if server_round == self.rounds:
+            aggregated_params = fl.common.parameters_to_ndarrays(parameters)
             print(aggregated_params)
             model = GBSModel()
             model.set_parameters(aggregated_params)
             os.makedirs(f"{self.saving_path}/models/", exist_ok=True)
             with open(f"{self.saving_path}/models/gbs.pkl", "wb") as f:
                 pickle.dump(model, f)
-            
+
             model_bytes = pickle.dumps(model)
             model_md5 = hashlib.md5(model_bytes).hexdigest()
             self.results_history['MODEL_MD5'] = model_md5
 
-        return parameters, {}
-    
+        return parameters, metrics
+
     def aggregate_evaluate(
         self,
         server_round: int,
@@ -149,6 +148,7 @@ def get_server_and_strategy(
 
     server = fl.server.Server
     strategy = CustomStrategy(
+        config=config,
         on_fit_config_fn=get_fit_config_fn(config['n_estimators']),
         rounds = config['num_rounds'],
         min_fit_clients = config["min_fit_clients"],
