@@ -352,6 +352,7 @@ def get_server_and_strategy(config: dict) -> FedXgbFullyFederated:
         "tree_method": "hist",
         "subsample": 0.8,
         "colsample_bytree": 0.8,
+        "seed": config.get("seed", 42),
     }
 
     if task == "binary":

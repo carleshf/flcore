@@ -7,8 +7,8 @@
         "balanced_accuracy": 0.5,
         "f1": 0.0,
         "per client accuracy": [
-          0.5,
-          0.625
+          0.5416666865348816,
+          0.5833333134651184
         ],
         "per client balanced_accuracy": [
           0.5,
@@ -31,8 +31,8 @@
           0.0
         ],
         "per client round_time [s]": [
-          0.00641942024230957,
-          0.0049097537994384766
+          0.014461517333984375,
+          0.019886255264282227
         ],
         "per client specificity": [
           1.0,
@@ -40,125 +40,125 @@
         ],
         "precision": 0.0,
         "recall": 0.0,
-        "round_time [s]": 0.0056645870208740234,
+        "round_time [s]": 0.0171738862991333,
         "specificity": 1.0
       },
       "fit_metrics": {
-        "local accuracy": 0.6875,
-        "local balanced_accuracy": 0.6652777791023254,
-        "local f1": 0.5833333432674408,
-        "local precision": 0.6746031939983368,
-        "local recall": 0.513888880610466,
-        "local specificity": 0.8166666626930237,
+        "local accuracy": 0.7291666865348816,
+        "local balanced_accuracy": 0.7184315919876099,
+        "local f1": 0.668421059846878,
+        "local precision": 0.737500011920929,
+        "local recall": 0.6181818246841431,
+        "local specificity": 0.8186813294887543,
         "per client local accuracy": [
-          0.7083333134651184,
-          0.6666666865348816
+          0.6666666865348816,
+          0.7916666865348816
         ],
         "per client local balanced_accuracy": [
-          0.7083333134651184,
-          0.6222222447395325
+          0.6571428775787354,
+          0.7797203063964844
         ],
         "per client local f1": [
-          0.6666666865348816,
-          0.5
+          0.6000000238418579,
+          0.7368420958518982
         ],
         "per client local precision": [
-          0.7777777910232544,
-          0.5714285969734192
+          0.6000000238418579,
+          0.875
         ],
         "per client local recall": [
-          0.5833333134651184,
-          0.4444444477558136
+          0.6000000238418579,
+          0.6363636255264282
         ],
         "per client local specificity": [
-          0.8333333134651184,
-          0.800000011920929
+          0.7142857313156128,
+          0.9230769276618958
         ],
         "per client n samples": [
           56,
           56
         ],
         "per client personalized accuracy": [
-          0.7083333134651184,
-          0.6666666865348816
+          0.6666666865348816,
+          0.7916666865348816
         ],
         "per client personalized balanced_accuracy": [
-          0.7083333134651184,
-          0.6222222447395325
+          0.6571428775787354,
+          0.7797203063964844
         ],
         "per client personalized f1": [
-          0.6666666865348816,
-          0.5
+          0.6000000238418579,
+          0.7368420958518982
         ],
         "per client personalized precision": [
-          0.7777777910232544,
-          0.5714285969734192
+          0.6000000238418579,
+          0.875
         ],
         "per client personalized recall": [
-          0.5833333134651184,
-          0.4444444477558136
+          0.6000000238418579,
+          0.6363636255264282
         ],
         "per client personalized specificity": [
-          0.8333333134651184,
-          0.800000011920929
+          0.7142857313156128,
+          0.9230769276618958
         ],
         "per client running_time": [
-          0.012181282043457031,
-          0.010427236557006836
+          0.03790163993835449,
+          0.030509233474731445
         ],
-        "personalized accuracy": 0.6875,
-        "personalized balanced_accuracy": 0.6652777791023254,
-        "personalized f1": 0.5833333432674408,
-        "personalized precision": 0.6746031939983368,
-        "personalized recall": 0.513888880610466,
-        "personalized specificity": 0.8166666626930237,
-        "running_time": 0.011304259300231934,
-        "training_time [s]": 0.038252830505371094
+        "personalized accuracy": 0.7291666865348816,
+        "personalized balanced_accuracy": 0.7184315919876099,
+        "personalized f1": 0.668421059846878,
+        "personalized precision": 0.737500011920929,
+        "personalized recall": 0.6181818246841431,
+        "personalized specificity": 0.8186813294887543,
+        "running_time": 0.03420543670654297,
+        "training_time [s]": 0.11760902404785156
       },
       "loss": 0.6931471805599453,
       "round": 1
     },
     {
       "eval_metrics": {
-        "accuracy": 0.6666666865348816,
-        "balanced_accuracy": 0.6333333253860474,
-        "f1": 0.5324675291776657,
+        "accuracy": 0.7291666567325592,
+        "balanced_accuracy": 0.7170579433441162,
+        "f1": 0.6657894551753998,
         "per client accuracy": [
-          0.6666666865348816,
-          0.6666666865348816
+          0.7083333134651184,
+          0.75
         ],
         "per client balanced_accuracy": [
-          0.6000000238418579,
-          0.6666666269302368
+          0.6928571462631226,
+          0.7412587404251099
         ],
         "per client f1": [
-          0.4285714328289032,
-          0.6363636255264282
+          0.6315789222717285,
+          0.699999988079071
         ],
         "per client n samples": [
           24,
           24
         ],
         "per client precision": [
-          0.6000000238418579,
-          0.699999988079071
+          0.6666666865348816,
+          0.7777777910232544
         ],
         "per client recall": [
-          0.3333333432674408,
-          0.5833333134651184
+          0.6000000238418579,
+          0.6363636255264282
         ],
         "per client round_time [s]": [
-          0.004606485366821289,
-          0.0047435760498046875
+          0.01415395736694336,
+          0.014562606811523438
         ],
         "per client specificity": [
-          0.8666666746139526,
-          0.75
+          0.7857142686843872,
+          0.8461538553237915
         ],
-        "precision": 0.6500000059604645,
-        "recall": 0.4583333283662796,
-        "round_time [s]": 0.004675030708312988,
-        "specificity": 0.8083333373069763
+        "precision": 0.722222238779068,
+        "recall": 0.6181818246841431,
+        "round_time [s]": 0.014358282089233398,
+        "specificity": 0.8159340620040894
       },
       "fit_metrics": {
         "per client n samples": [
@@ -167,42 +167,42 @@
         ],
         "per client personalized accuracy": [
           0.6666666865348816,
-          0.7083333134651184
+          0.7916666865348816
         ],
         "per client personalized balanced_accuracy": [
-          0.6222222447395325,
-          0.7083333134651184
+          0.6571428775787354,
+          0.7797203063964844
         ],
         "per client personalized f1": [
-          0.5,
-          0.6666666865348816
+          0.6000000238418579,
+          0.7368420958518982
         ],
         "per client personalized precision": [
-          0.5714285969734192,
-          0.7777777910232544
+          0.6000000238418579,
+          0.875
         ],
         "per client personalized recall": [
-          0.4444444477558136,
-          0.5833333134651184
+          0.6000000238418579,
+          0.6363636255264282
         ],
         "per client personalized specificity": [
-          0.800000011920929,
-          0.8333333134651184
+          0.7142857313156128,
+          0.9230769276618958
         ],
         "per client running_time": [
-          0.005373716354370117,
-          0.005575418472290039
+          0.01669621467590332,
+          0.016937971115112305
         ],
-        "personalized accuracy": 0.6875,
-        "personalized balanced_accuracy": 0.6652777791023254,
-        "personalized f1": 0.5833333432674408,
-        "personalized precision": 0.6746031939983368,
-        "personalized recall": 0.513888880610466,
-        "personalized specificity": 0.8166666626930237,
-        "running_time": 0.005474567413330078,
-        "training_time [s]": 0.06041574478149414
+        "personalized accuracy": 0.7291666865348816,
+        "personalized balanced_accuracy": 0.7184315919876099,
+        "personalized f1": 0.668421059846878,
+        "personalized precision": 0.737500011920929,
+        "personalized recall": 0.6181818246841431,
+        "personalized specificity": 0.8186813294887543,
+        "running_time": 0.016817092895507812,
+        "training_time [s]": 0.1895582675933838
       },
-      "loss": 0.544509396240598,
+      "loss": 0.4897215185431321,
       "round": 2
     }
   ],

@@ -13,6 +13,7 @@ import logging
 
 import flcore.datasets as datasets
 from flcore.utils import StreamToLogger, GetModelClient, CheckClientConfig, survival_models_list, log_detailed_error
+from flcore.seeding import seed_everything
 from flcore.cli_args import (
     add_common_args,
     add_client_only_args,
@@ -46,6 +47,8 @@ if __name__ == "__main__":
         sys.stderr.flush()
         sys.stdout.flush()
         os._exit(1)
+
+    seed_everything(config["seed"])
 
     # Create sandbox log file path
     Path(config["sandbox_path"]).mkdir(parents=True, exist_ok=True)

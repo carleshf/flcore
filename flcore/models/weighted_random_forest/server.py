@@ -33,7 +33,7 @@ def fit_round( server_round: int ) -> Dict:
 
 def get_server_and_strategy(config):
     bal_RF = config['balanced']
-    model = get_model(bal_RF)
+    model = get_model(bal_RF, random_state=config.get("seed", 42))
     utils.set_initial_params_server( model)
 
     # Pass parameters to the Strategy for server-side parameter initialization

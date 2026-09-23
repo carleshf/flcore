@@ -3,7 +3,7 @@
   "rounds": [
     {
       "eval_metrics": {
-        "mlogloss": 0.8584105651825666
+        "mlogloss": 0.8406418139735857
       },
       "fit_metrics": {
         "n_out": 2.0,
@@ -15,7 +15,7 @@
     },
     {
       "eval_metrics": {
-        "mlogloss": 0.8919941820204258
+        "mlogloss": 0.8481248902777831
       },
       "fit_metrics": {
         "n_out": 2.0,

@@ -10,6 +10,7 @@ import flwr as fl
 from pathlib import Path
 
 from flcore.utils import StreamToLogger, CheckServerConfig, GetModelServerStrategy, log_detailed_error
+from flcore.seeding import seed_everything
 from flcore.cli_args import (
     add_common_args,
     add_server_only_args,
@@ -40,6 +41,8 @@ if __name__ == "__main__":
         sys.stderr.flush()
         sys.stdout.flush()
         os._exit(1)
+
+    seed_everything(config["seed"])
 
     # Create sandbox log file path
 # Originalmente estaba asi:

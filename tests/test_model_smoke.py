@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from flcore.datasets import load_dataset
+from flcore.seeding import seed_everything
 from flcore.utils import GetModelClient, GetModelServerStrategy
 
 from config_builder import build_validated_config
@@ -88,6 +89,11 @@ def test_model_round_trip(model, task, data_fixture, request, sandbox_path):
         event_col=data_info.get("event_col"),
         node_name="server",
     )
+
+    # nn's torch model init + DataLoader shuffling are otherwise unseeded --
+    # without this, two runs of the same code produce different losses, which
+    # makes golden-diffing meaningless (see CLAUDE.md Sec 5.11).
+    seed_everything(config["seed"])
 
     _, strategy = GetModelServerStrategy(config)
     assert strategy is not None

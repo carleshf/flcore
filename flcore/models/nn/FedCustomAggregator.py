@@ -21,58 +21,36 @@ from flwr.server.strategy.aggregate import aggregate, weighted_loss_avg
 import numpy as np
 import flwr.server.strategy.fedavg as fedav
 import time
-from flcore.dropout import select_clients
-from flcore.smoothWeights import smooth_aggregate
 import joblib
 
-class UncertaintyWeightedFedAvg(fl.server.strategy.FedAvg):
-    def __init__(self, epsilon: float = 1e-3, **kwargs):
-        super().__init__(**kwargs)
+from flcore.base_strategy import BaseFLStrategy
+from flcore.models.nn.aggregator import NNAggregator
+
+
+class UncertaintyWeightedFedAvg(BaseFLStrategy):
+    """Weights each client's params by num_examples / (epsilon + entropy) --
+    more data and lower prediction entropy means more confidence in that
+    client's update -- then does a weighted average of the raw ndarray layers
+    (NNAggregator). Overrides _compute_weights instead of using
+    BaseFLStrategy's default computeSmoothedWeights, since this weighting is
+    metrics-derived (each client's reported "entropy"), not num_examples/
+    smoothing_strenght-derived."""
+
+    def __init__(self, config: dict, epsilon: float = 1e-3, **kwargs):
+        super().__init__(
+            config=config,
+            aggregator_cls=NNAggregator,
+            serialize_fn=ndarrays_to_parameters,
+            deserialize_fn=parameters_to_ndarrays,
+            **kwargs,
+        )
         self.epsilon = epsilon
 
-    def aggregate_fit(self, server_round: int, results: List[Tuple[fl.server.client_proxy.ClientProxy, fl.common.FitRes]], failures):
-        if not results:
-            return None, {}
-        # results es una lista con un único elemento que es una tupla que es fl.server.client_proxy
-        # y fl.common.FitRes, failures es a parte
-#        print(":::::::::::::::::::::::::::::::::::::",results[0][1])
-
-        weights_results = [
-            (parameters_to_ndarrays(fit_res.parameters), fit_res.num_examples)
-            for _, fit_res in results
-        ]
-
-
-        weights_results = []
-        agg_weights = []
-        for _, fitres in results:
-            ndarrays = fl.common.parameters_to_ndarrays(fitres.parameters)
-            num_examples = fitres.num_examples
-            entropy = fitres.metrics.get("entropy", 1.0)
-            # peso = más datos y menor entropía => mayor confianza
-            w = num_examples / (self.epsilon + entropy)
-            weights_results.append((ndarrays, w))
-            agg_weights.append(w)
-
-        wsum = np.sum(agg_weights) + 1e-12
-        scaled = [(params, w / wsum) for params, w in weights_results]
-
-        new_params = None
-        for params, alpha in scaled:
-            if new_params is None:
-                new_params = [alpha * p for p in params]
-            else:
-                new_params = [np.add(acc, alpha * p) for acc, p in zip(new_params, params)]
-
-        parameters_aggregated = ndarrays_to_parameters(new_params)
-        # Aggregate custom metrics if aggregation fn was provided
-        metrics_aggregated = {}
-        """
-        if self.fit_metrics_aggregation_fn:
-            fit_metrics = [(res.num_examples, res.metrics) for _, res in results]
-            metrics_aggregated = self.fit_metrics_aggregation_fn(fit_metrics)
-        elif server_round == 1:  # Only log this warning once
-            log(WARNING, "No fit_metrics_aggregation_fn provided")
-        """
-        return parameters_aggregated, metrics_aggregated
+    def _compute_weights(self, deserialized: list, results) -> List[float]:
+        weights = []
+        for _, fit_res in results:
+            entropy = fit_res.metrics.get("entropy", 1.0)
+            # more data and lower entropy => more confidence
+            weights.append(fit_res.num_examples / (self.epsilon + entropy))
+        return weights
 

@@ -129,9 +129,9 @@ class CustomStrategy(BaseFLStrategy):
 
         return loss_aggregated, metrics_aggregated
 
-def get_fit_config_fn(estimators):
+def get_fit_config_fn(estimators, random_state=42):
     def fit_config(rnd: int):
-        conf = {"model_type": 'gbs', "n_estimators": estimators}
+        conf = {"model_type": 'gbs', "n_estimators": estimators, "random_state": random_state}
         return conf
     return fit_config
 
@@ -149,7 +149,7 @@ def get_server_and_strategy(
     server = fl.server.Server
     strategy = CustomStrategy(
         config=config,
-        on_fit_config_fn=get_fit_config_fn(config['n_estimators']),
+        on_fit_config_fn=get_fit_config_fn(config['n_estimators'], config.get("seed", 42)),
         rounds = config['num_rounds'],
         min_fit_clients = config["min_fit_clients"],
         min_evaluate_clients = config["min_evaluate_clients"],
