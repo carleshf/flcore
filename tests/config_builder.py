@@ -6,13 +6,9 @@ both a Client and a Strategy in one process needs ONE dict that satisfies both
 flcore.utils.CheckClientConfig and flcore.utils.CheckServerConfig, so this module
 merges the two CLI surfaces' defaults.
 
-`task`/`balanced`/`model` no longer disagree between server_cmd.py and
-client_cmd.py (both now default to `None`/`None`/`"True"` respectively). One
-mismatch of the same shape remains -- `dropout_method` defaults to Python `None`
-while the disabling check in FedCustomAggregator.configure_fit compares against
-the *string* `"None"`, silently enabling dropout by default -- so this still
-picks an explicit, intended value for that one rather than relying on the
-default.
+`task`/`balanced`/`model`/`dropout_method` no longer disagree between
+server_cmd.py and client_cmd.py -- all four now default to the same value on
+both entry points.
 """
 from pathlib import Path
 from typing import Optional
@@ -35,7 +31,6 @@ def _defaults(sandbox_path: Path) -> dict:
         "strategy": "FedAvg",
         "smooth_method": "EqualVoting",
         "smoothing_strenght": 0.5,
-        # intended-disabled sentinel; see module docstring re: the None-vs-"None" bug
         "dropout_method": "None",
         "dropout_percentage": 0.0,
         "checkpoint_selection_metric": "precision",
@@ -68,7 +63,6 @@ def _defaults(sandbox_path: Path) -> dict:
         "train_labels": [],
         "target_labels": [],
         "train_size": 0.7,
-        "validation_size": 0.2,
         "test_size": 0.1,
         "lr": 1e-3,
         "device": "cpu",

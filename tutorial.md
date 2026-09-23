@@ -19,7 +19,6 @@
 | `--train_labels`         | list[str] | None              | List of feature columns for training          |
 | `--target_labels`        | list[str] | None              | List of target columns (labels)               |
 | `--train_size`           | float     | 0.7               | Fraction for training dataset                 |
-| `--validation_size`      | float     | 0.2               | Fraction for validation dataset               |
 | `--test_size`            | float     | 0.1               | Fraction for testing dataset                  |
 
 3. Training Variables
@@ -28,7 +27,6 @@
 | ------------------------------- | ----- | ----------- | -------------------------------------------------- |
 | `--num_rounds`                  | int   | 50          | Number of federated iterations                     |
 | `--lr`                          | float | 1e-3        | Learning rate (when applicable)                    |
-| `--checkpoint_selection_metric` | str   | "precision" | Metric used to select checkpoint models            |
 | `--seed`                        | int   | 42          | Random seed                                        |
 | `--num_clients`                 | int   | 1           | Number of clients in federation (informative only) |
 
@@ -113,7 +111,7 @@ Survival
 | `--strategy`                    | str   | "FedAvg"           | Federated aggregation strategy       |
 | `--smooth_method`               | str   | "EqualVoting"      | Weight smoothing method              |
 | `--smoothing_strenght`          | float | 0.5                | Weight smoothing strength            |
-| `--dropout_method`              | str   | None               | Dropout strategy for clients         |
+| `--dropout_method`              | str   | "None"             | Dropout strategy for clients         |
 | `--dropout_percentage`          | float | 0.0                | Ratio of dropout nodes               |
 | `--checkpoint_selection_metric` | str   | "precision"        | Metric used for checkpoint selection |
 | `--metrics_aggregation`         | str   | "weighted_average" | Aggregation method for metrics       |

@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument("--strategy", type=str, default="FedAvg",  help="Metrics")
     parser.add_argument("--smooth_method", type=str, default="EqualVoting", help="Weight smoothing")
     parser.add_argument("--smoothing_strenght", type=float, default=0.5, help="Smoothing strenght")
-    parser.add_argument("--dropout_method", type=str, default=None, help="Determines if dropout is used")
+    parser.add_argument("--dropout_method", type=str, default="None", help="Determines if dropout is used")
     parser.add_argument("--dropout_percentage", type=float, default=0.0, help="Ratio of dropout nodes")
     parser.add_argument("--checkpoint_selection_metric", type=str, default="precision", help="Metric used for checkpoints")
     parser.add_argument("--metrics_aggregation", type=str, default="weighted_average",  help="Metrics")
@@ -58,7 +58,6 @@ if __name__ == "__main__":
     parser.add_argument("--l1_penalty", type=float, default=0.0, help="L1 Penalty")
 
     # *******************************************************************************************
-    parser.add_argument("--n_features", type=int, default=0, help="Number of features")
     parser.add_argument("--n_feats", type=int, default=0, help="Number of features")
     parser.add_argument("--n_out", type=int, default=0, help="Number of outputs")
 # *******************************************************************************************

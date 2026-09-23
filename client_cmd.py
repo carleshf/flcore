@@ -32,12 +32,10 @@ if __name__ == "__main__":
     parser.add_argument("--train_labels", type=str, nargs='+', default=[], help="Dataloader to use")
     parser.add_argument("--target_labels", type=str, nargs='+', default=[], help="Dataloader to use")
     parser.add_argument("--train_size", type=float, default=0.7, help="Fraction of dataset to use for training. [0,1)")
-    parser.add_argument("--validation_size", type=float, default=0.2, help="Fraction of dataset to use for validation. [0,1)")
     parser.add_argument("--test_size", type=float, default=0.1, help="Fraction of dataset to use for testing. [0,1)")
     # Variables training related
     parser.add_argument("--num_rounds", type=int, default=50, help="Number of federated iterations")
-    parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate when needed")    
-    parser.add_argument("--checkpoint_selection_metric", type=str, default="precision", help="Metric used for checkpoints")
+    parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate when needed")
     parser.add_argument("--seed", type=int, default=42, help="Seed")
     parser.add_argument("--num_clients", type=int, default=1, help="Number of clients") # shouldnt exist here
 
