@@ -33,12 +33,7 @@ def fit_round( server_round: int ) -> Dict:
 
 
 def get_server_and_strategy(config):
-    bal_RF = config['balanced']
-#    model = get_model(bal_RF) 
-#    utils.set_initial_params_server( model)
-
     # Pass parameters to the Strategy for server-side parameter initialization
-    #strategy = fl.server.strategy.FedAvg(
     strategy = FedCustom(
         config = config,
         #Have running the same number of clients otherwise it does not run the federated
@@ -48,14 +43,8 @@ def get_server_and_strategy(config):
         #enable evaluate_fn  if we have data to evaluate in the server
         #evaluate_fn           = utils_RF.get_evaluate_fn( model ), #no data in server
         evaluate_metrics_aggregation_fn = metrics_aggregation_fn,
-        on_fit_config_fn      = fit_round 
+        on_fit_config_fn      = fit_round
     )
-    #Select normal RF or Balanced RF from config
-    strategy.bal_RF= config['balanced']
-    strategy.dropout_method = config['dropout_method']
-    strategy.percentage_drop = config['dropout_percentage']
-    strategy.smoothing_method = config['smooth_method']
-    strategy.smoothing_strenght = config['smoothing_strenght']
 
     filename = 'server_results.txt'
     with open(
@@ -64,8 +53,8 @@ def get_server_and_strategy(config):
     ) as f:
         f.write(f"Name Model Random Forest:  \n")
         f.write(f"Drop out Method: {strategy.dropout_method} \n")
-        f.write(f"Drop out Method: {strategy.percentage_drop} \n")
-        f.write(f"Smooth Method: {strategy.smoothing_method} \n")
+        f.write(f"Drop out Method: {strategy.dropout_percentage} \n")
+        f.write(f"Smooth Method: {strategy.smooth_method} \n")
         f.write(f"Smooth Strenght: {strategy.smoothing_strenght } \n")
 
     return None, strategy

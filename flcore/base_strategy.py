@@ -59,6 +59,23 @@ class BaseFLStrategy(fl.server.strategy.FedAvg):
         self.clients_first_round_time: Dict[str, float] = {}
         self.clients_num_examples: Dict[str, int] = {}
 
+    def _aggregator_kwargs(self) -> dict:
+        """Extra kwargs to pass to aggregator_cls(models=..., weights=..., ...),
+        beyond models/weights. Override for a model whose Aggregator needs more
+        context (e.g. random_forest's Aggregator needs `config` to build a fresh
+        model shell, plus whatever round-to-round state the Strategy is carrying
+        forward -- see _after_aggregate)."""
+        return {}
+
+    def _after_aggregate(self, aggregator) -> None:
+        """Called right after aggregator.aggregate(), with the same aggregator
+        instance -- a hook for a model whose aggregation carries state across
+        rounds (e.g. random_forest's server_estimators/server_estimators_weights)
+        to read that updated state back off the aggregator and store it on the
+        Strategy for next round's _aggregator_kwargs(). No-op by default: most
+        models (cox/rsf/gbs/nn/linear_models) are stateless round to round."""
+        pass
+
     def _compute_weights(self, deserialized: list, results) -> List[float]:
         """Per-client weight for the merge, one entry per `results`/`deserialized`
         item, in order. Default: computeSmoothedWeights (num_examples + smoothing).
@@ -109,8 +126,9 @@ class BaseFLStrategy(fl.server.strategy.FedAvg):
         deserialized = [self.deserialize_fn(fit_res.parameters) for _, fit_res in results]
         weights = self._compute_weights(deserialized, results)
 
-        aggregator = self.aggregator_cls(models=deserialized, weights=weights)
+        aggregator = self.aggregator_cls(models=deserialized, weights=weights, **self._aggregator_kwargs())
         aggregated_params = aggregator.aggregate()
+        self._after_aggregate(aggregator)
         parameters_aggregated = self.serialize_fn(aggregated_params)
 
         if server_round == 1:
