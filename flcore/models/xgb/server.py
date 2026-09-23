@@ -11,10 +11,10 @@ import numpy as np
 import xgboost as xgb
 
 from flwr.common import (
-    ArrayRecord, 
-    ConfigRecord, 
-    Message, 
-    MetricRecord, 
+    ArrayRecord,
+    ConfigRecord,
+    Message,
+    MetricRecord,
     RecordDict,
     Parameters,
     FitRes,
@@ -24,21 +24,11 @@ from flwr.common import (
     ndarrays_to_parameters,
 )
 from flwr.server import Grid
-from flwr.server.strategy import FedAvg
 from flwr.server.client_proxy import ClientProxy
 
+from flcore.base_strategy import BaseFLStrategy
+from flcore.models.xgb.aggregator import XGBAggregator
 
-# ==========================================================
-# BAGGING AGGREGATION (Tree-Level JSON Merge)
-# ==========================================================
-
-def _get_tree_nums(xgb_model_org: bytes):
-    """Extract total tree numbers from XGBoost JSON model."""
-    bst = json.loads(bytearray(xgb_model_org))
-    model = bst["learner"]["gradient_booster"]["model"]
-    tree_num = int(model["gbtree_model_param"]["num_trees"])
-    paral_tree_num = int(model["gbtree_model_param"]["num_parallel_tree"])
-    return tree_num, paral_tree_num
 
 def aggregate_metricrecords(
     records: list[RecordDict], weighting_metric_name: str
@@ -84,68 +74,58 @@ def aggregate_metricrecords(
 
     return aggregated_metrics
 
-def aggregate_bagging(
-    bst_prev_org: bytes,
-    bst_curr_org: bytes,
-) -> bytes:
-    """Conduct bagging aggregation for given trees."""
-    if bst_prev_org == b"":
-        return bst_curr_org
-
-    tree_num_prev, _ = _get_tree_nums(bst_prev_org)
-    _, paral_tree_num_curr = _get_tree_nums(bst_curr_org)
-
-    bst_prev = json.loads(bytearray(bst_prev_org))
-    bst_curr = json.loads(bytearray(bst_curr_org))
-
-    previous_model = bst_prev["learner"]["gradient_booster"]["model"]
-    previous_model["gbtree_model_param"]["num_trees"] = str(
-        tree_num_prev + paral_tree_num_curr
-    )
-
-    trees_curr = bst_curr["learner"]["gradient_booster"]["model"]["trees"]
-
-    for tree_count in range(paral_tree_num_curr):
-        trees_curr[tree_count]["id"] = tree_num_prev + tree_count
-        previous_model["trees"].append(trees_curr[tree_count])
-        previous_model["tree_info"].append(0)
-
-    return bytes(json.dumps(bst_prev), "utf-8")
-
-
 # ==========================================================
 # STRATEGY
 # ==========================================================
 
-class FedXgbFullyFederated(FedAvg):
-    """Fully federated XGBoost strategy (bagging or cyclic)."""
+def _xgb_deserialize(parameters) -> bytes:
+    """xgb's own quirk: a client's params are wire-encoded as one ndarray of
+    raw booster bytes (uint8), not a numeric tensor list -- unwrap straight to
+    bytes so XGBAggregator can operate on them directly."""
+    ndarrays = parameters_to_ndarrays(parameters)
+    return ndarrays[0].tobytes()
+
+
+def _xgb_serialize(model_bytes: bytes) -> Parameters:
+    return ndarrays_to_parameters([np.frombuffer(model_bytes, dtype=np.uint8)])
+
+
+class FedXgbFullyFederated(BaseFLStrategy):
+    """Fully federated XGBoost strategy (bagging or cyclic).
+
+    Reuses BaseFLStrategy's shared configure_fit (dropout -- newly gained, this
+    model never had it wired in before) and aggregate_fit (deserialize -> weight
+    -- computed but unused, see XGBAggregator -> XGBAggregator.aggregate() ->
+    re-serialize, carrying current_model across rounds via
+    _aggregator_kwargs/_after_aggregate, same pattern as random_forest's
+    server_estimators). aggregate_evaluate is NOT inherited: this model never
+    wired evaluate_metrics_aggregation_fn in, so its own hand-rolled proportional
+    metrics average is genuinely different behavior, not a redundant
+    reimplementation of the FedAvg default -- kept as its own override.
+    """
 
     def __init__(
         self,
+        config: dict,
         num_local_rounds: int = 5,
         xgb_params: Dict = None,
         saving_path: str = "./sandbox",
-        min_fit_clients: int = 1,
-        min_evaluate_clients: int = 1,
-        min_available_clients: int = 1,
-        evaluate_fn: Optional[Callable] = None,
-        on_fit_config_fn: Optional[Callable] = None,
-        on_evaluate_config_fn: Optional[Callable] = None,
         train_method: str = "bagging",
         fraction_train=1.0,
         fraction_evaluate=1.0,
-
-        # --> INHERITED
         **kwargs,
     ):
+        # fraction_train/fraction_evaluate accepted-and-discarded for parity
+        # with the pre-migration signature (they were never real FedAvg kwargs
+        # -- fraction_fit/fraction_evaluate are -- so forwarding them via
+        # **kwargs would raise; keep them out of kwargs instead of wiring them
+        # in, since that'd be a real behavior change, not a refactor).
         super().__init__(
-            min_fit_clients=min_fit_clients,
-            min_evaluate_clients=min_evaluate_clients,
-            min_available_clients=min_available_clients,
-            evaluate_fn=evaluate_fn,
-            on_fit_config_fn=on_fit_config_fn,
-            on_evaluate_config_fn=on_evaluate_config_fn,
-            **kwargs
+            config=config,
+            aggregator_cls=XGBAggregator,
+            serialize_fn=_xgb_serialize,
+            deserialize_fn=_xgb_deserialize,
+            **kwargs,
         )
 
         self.train_method = train_method
@@ -153,7 +133,7 @@ class FedXgbFullyFederated(FedAvg):
         self.saving_path = Path(saving_path)
         self.saving_path.mkdir(parents=True, exist_ok=True)
 
-        self.current_model: Optional[bytes] = b""
+        self.current_model: bytes = b""
 
         print(f"[FedXgb] Training method: {train_method}")
         print(f"[FedXgb] XGBoost params: {self.xgb_params}")
@@ -168,8 +148,14 @@ class FedXgbFullyFederated(FedAvg):
         return ndarrays_to_parameters([empty])
 
     # ------------------------------------------------------
-    # AGGREGATE FIT (CRITICAL FIX)
+    # AGGREGATE FIT
     # ------------------------------------------------------
+
+    def _aggregator_kwargs(self) -> dict:
+        return {"train_method": self.train_method, "current_model": self.current_model}
+
+    def _after_aggregate(self, aggregator) -> None:
+        self.current_model = aggregator.updated_current_model
 
     def aggregate_fit(
         self,
@@ -177,51 +163,19 @@ class FedXgbFullyFederated(FedAvg):
         results: List[Tuple[ClientProxy, FitRes]],
         failures: List,
     ) -> Tuple[Optional[Parameters], Dict[str, Scalar]]:
-
         if not results:
             return None, {}
 
         print(f"\n[Round {server_round}] Aggregating {len(results)} clients")
 
-        models: List[bytes] = []
-
-        for _, fit_res in results:
-            ndarrays = parameters_to_ndarrays(fit_res.parameters)
-            model_bytes = ndarrays[0].tobytes()
-
-            if model_bytes:
-                models.append(model_bytes)
-
-        if not models:
+        parameters, _ = super().aggregate_fit(server_round, results, failures)
+        if parameters is None:
             return None, {}
 
-        # -----------------------------------
-        # BAGGING
-        # -----------------------------------
-        if self.train_method == "bagging":
+        self._save_checkpoint(self.current_model, server_round)
 
-            combined = self.current_model
-
-            for m in models:
-                combined = aggregate_bagging(combined, m)
-
-        # -----------------------------------
-        # CYCLIC
-        # -----------------------------------
-        else:
-            combined = models[-1]
-
-        self.current_model = combined
-
-        # Save checkpoint
-        self._save_checkpoint(combined, server_round)
-
-        # Convert back to Parameters
-        aggregated_params = ndarrays_to_parameters(
-            [np.frombuffer(combined, dtype=np.uint8)]
-        )
-
-        # Weighted metric aggregation
+        # xgb's own weighted metric aggregation -- not fit_metrics_aggregation_fn
+        # based like other models (never wired in for this one), kept as-is.
         metrics_aggregated: Dict[str, Scalar] = {}
         total_examples = sum(fit_res.num_examples for _, fit_res in results)
 
@@ -239,7 +193,7 @@ class FedXgbFullyFederated(FedAvg):
 
         print(f"[Round {server_round}] Aggregation done.")
 
-        return aggregated_params, metrics_aggregated
+        return parameters, metrics_aggregated
 
     # ------------------------------------------------------
     # EVALUATION
@@ -385,6 +339,7 @@ def get_server_and_strategy(config: dict) -> FedXgbFullyFederated:
     print("=" * 60 + "\n")
 
     strategy = FedXgbFullyFederated(
+        config=config,
         train_method=train_method,
         num_local_rounds=num_local_rounds,
         xgb_params=xgb_params,
