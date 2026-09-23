@@ -22,7 +22,7 @@ from typing import cast
 
 
 def get_model(bal_RF):
-    if(bal_RF == True):
+    if str(bal_RF).lower() == "true":
         model = BalancedRandomForestClassifier(n_estimators=100,random_state=42)
     else:
         model = RandomForestClassifier(n_estimators=100,class_weight= "balanced",max_depth=2,random_state=42)

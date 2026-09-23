@@ -1,0 +1,30 @@
+{
+  "model": "xgb",
+  "rounds": [
+    {
+      "eval_metrics": {
+        "mlogloss": 0.8584105651825666
+      },
+      "fit_metrics": {
+        "n_out": 2.0,
+        "num_examples": 56.0,
+        "num_trees": 50.0
+      },
+      "loss": 1.0,
+      "round": 1
+    },
+    {
+      "eval_metrics": {
+        "mlogloss": 0.8919941820204258
+      },
+      "fit_metrics": {
+        "n_out": 2.0,
+        "num_examples": 56.0,
+        "num_trees": 75.0
+      },
+      "loss": 1.0,
+      "round": 2
+    }
+  ],
+  "task": "classification"
+}

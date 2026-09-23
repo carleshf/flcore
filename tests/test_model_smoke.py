@@ -21,18 +21,19 @@ from fed_driver import run_federated_rounds
 
 GOLDEN_DIR = Path(__file__).parent / "golden"
 
-# Known-broken model configs as of this session's run against the synthetic
-# fixture -- xfail'd (strict=True) rather than left red so a genuine regression
-# in a *passing* model still fails the suite, while these
-# stay visible and self-documenting. strict=True means the day someone fixes the
-# underlying bug, this test flips to XPASS and fails until the xfail is removed --
-# that's the intended "please update this" signal, not a bug in the test.
+# Known-broken model configs go here, xfail'd (strict=True) rather than left
+# red so a genuine regression in a *passing* model still fails the suite while
+# these stay visible and self-documenting. strict=True means the day someone
+# fixes the underlying bug, this test flips to XPASS and fails until the xfail
+# is removed -- that's the intended "please update this" signal, not a bug in
+# the test. xgb was fixed this session -- see CLAUDE.md Sec 5.10.
 _XFAIL_REASONS = {
-    "weighted_random_forest": "flcore/models/weighted_random_forest/server.py reads nested "
-    "config['weighted_random_forest'][...] keys from the old YAML config shape; "
-    "server_cmd.py/client_cmd.py never produce that nested key -> KeyError",
-    "xgb": "flcore/models/xgb/server.py::aggregate_bagging raises KeyError('iteration_indptr') "
-    "merging a second client's trees; xgb's bagging aggregation is broken on the installed xgboost version",
+    "weighted_random_forest": "flcore/models/weighted_random_forest/FedCustomAggregator.py::"
+    "aggregate_fit passes a list of per-client (model, num_examples[, weight]) tuples straight to "
+    "serialize_RF, which expects a flat list of independently np.save-able arrays, not tuples of "
+    "mixed objects -- np.save raises ValueError (inhomogeneous shape) regardless of smoothing "
+    "on/off. A real architectural bug in this model's server-side aggregation, not a config-key "
+    "issue (those were fixed this session) -- see CLAUDE.md Sec 5.10.",
 }
 
 

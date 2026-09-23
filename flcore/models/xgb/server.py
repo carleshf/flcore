@@ -103,11 +103,6 @@ def aggregate_bagging(
         tree_num_prev + paral_tree_num_curr
     )
 
-    iteration_indptr = previous_model["iteration_indptr"]
-    previous_model["iteration_indptr"].append(
-        iteration_indptr[-1] + paral_tree_num_curr
-    )
-
     trees_curr = bst_curr["learner"]["gradient_booster"]["model"]["trees"]
 
     for tree_count in range(paral_tree_num_curr):
