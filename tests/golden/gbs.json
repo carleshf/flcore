@@ -1,0 +1,28 @@
+{
+  "model": "gbs",
+  "rounds": [
+    {
+      "eval_metrics": {
+        "brier_score": 0.27353624849269026,
+        "c_index": 0.3974358974358974,
+        "ibs": 0.2788370354610318,
+        "n_estimators": 10.0
+      },
+      "fit_metrics": {},
+      "loss": 0.6025641025641026,
+      "round": 1
+    },
+    {
+      "eval_metrics": {
+        "brier_score": 0.27353624849269026,
+        "c_index": 0.3974358974358974,
+        "ibs": 0.2788370354610318,
+        "n_estimators": 10.0
+      },
+      "fit_metrics": {},
+      "loss": 0.6025641025641026,
+      "round": 2
+    }
+  ],
+  "task": "survival"
+}

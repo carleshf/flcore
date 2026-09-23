@@ -13,77 +13,32 @@ import logging
 
 import flcore.datasets as datasets
 from flcore.utils import StreamToLogger, GetModelClient, CheckClientConfig, survival_models_list, log_detailed_error
+from flcore.cli_args import (
+    add_common_args,
+    add_client_only_args,
+    add_random_forest_args,
+    add_xgb_args,
+    add_linear_model_args,
+    add_nn_args,
+    add_survival_args,
+    CLIENT_MODEL_GROUPS,
+    warn_unused_args,
+)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Reads parameters from command line.")
-    # Variables node settings
-    parser.add_argument("--node_name", type=str, default="./", help="Node name for certificates")
-    parser.add_argument("--local_port", type=int, default=8081, help="Local port")
-    parser.add_argument("--sandbox_path", type=str, default="/sandbox", help="Sandbox path to use")
-    parser.add_argument("--certs_path", type=str, default="/certs", help="Certificates path")
-    parser.add_argument("--data_path", type=str, default="/data", help="Data path")
-    parser.add_argument("--production_mode", type=str, default="True",  help="Production mode") # ¿Should exist?
-    parser.add_argument("--experiment_name", type=str, default="experiment_1", help="Experiment directory")
-    # Variables dataset related
-    parser.add_argument("--dataset", type=str, default="dt4h_format", help="Dataloader to use")
-    parser.add_argument("--data_id", type=str, default="data_id.parquet" , help="Dataset ID")
-    parser.add_argument("--normalization_method",type=str, default="IQR", help="Type of normalization: IQR STD MIN_MAX")
-    parser.add_argument("--train_labels", type=str, nargs='+', default=[], help="Dataloader to use")
-    parser.add_argument("--target_labels", type=str, nargs='+', default=[], help="Dataloader to use")
-    parser.add_argument("--train_size", type=float, default=0.7, help="Fraction of dataset to use for training. [0,1)")
-    parser.add_argument("--test_size", type=float, default=0.1, help="Fraction of dataset to use for testing. [0,1)")
-    # Variables training related
-    parser.add_argument("--num_rounds", type=int, default=50, help="Number of federated iterations")
-    parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate when needed")
-    parser.add_argument("--seed", type=int, default=42, help="Seed")
-    parser.add_argument("--num_clients", type=int, default=1, help="Number of clients") # shouldnt exist here
-
-    # General variables model related
-    parser.add_argument("--model", type=str, default=None, help="Model to train")
-    parser.add_argument("--n_feats", type=int, default=0, help="Number of input features")
-    parser.add_argument("--n_out", type=int, default=0, help="Number of output features")
-    parser.add_argument("--task", type=str, default=None, help="Task to perform (classification, regression)")
-    parser.add_argument("--device", type=str, default="cpu", help="Device for training, CPU, GPU")
-    parser.add_argument("--local_epochs", type=int, default=10, help="Number of local epochs to train in each round")
-    parser.add_argument("--batch_size", type=int, default=8, help="Batch size to train")
-    parser.add_argument("--penalty", type=str, default="none", help="Penalties: none, l1, l2, elasticnet, smooth l1")
-    parser.add_argument("--save_every_n_rounds", type=int, default=1, help="Save model checkpoints every N rounds")
-
-    # Specific variables model related
-    # # Linear models
-    parser.add_argument("--solver", type=str, default="saga", help="Numerical solver of optimization method")
-    parser.add_argument("--l1_ratio", type=str, default=0.5, help="L1-L2 Ratio, necessary for ElasticNet, 0 -> L1 ; 1 -> L2")
-    parser.add_argument("--max_iter", type=int, default=100000, help="Max iterations of optimizer")
-    parser.add_argument("--tol", type=float, default=0.001, help="Gamma for SVR")
-    parser.add_argument("--kernel", type=str, default="linear", help="Kernel of SVR")
-    #kernel{‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’} or callable, default=’rbf’
-    parser.add_argument("--degree", type=int, default=3, help="Degree of polinonial")
-    parser.add_argument("--gamma", type=str, default="scale", help="Gamma for SVR")
-    # # Random forest
-    parser.add_argument("--balanced", type=str, default="True", help="Balanced Random Forest: True or False")
-    parser.add_argument("--n_estimators", type=int, default=100, help="Number of estimators")
-    parser.add_argument("--max_depth", type=int, default=2, help="Max depth")
-    parser.add_argument("--class_weight", type=str, default="balanced", help="Class weight")
-    parser.add_argument("--levelOfDetail", type=str, default="DecisionTree", help="Level of detail")
-    parser.add_argument("--regression_criterion", type=str, default="squared_error", help="Criterion for training")
-    # # Neural networks
-    # params : type: "nn", "BNN" Bayesiana, otros
-    parser.add_argument("--dropout_p", type=float, default=0.0, help="Montecarlo dropout rate")
-    parser.add_argument("--T", type=int, default=20, help="Samples of MC dropout")
-    # # XGB
-    parser.add_argument("--booster", type=str, default="gbtree", help="Booster to use: gbtree, gblinear or dart")
-    parser.add_argument("--tree_method", type=str, default="hist", help="Tree method: exact, approx hist")
-    parser.add_argument("--train_method", type=str, default="bagging", help="Train method: bagging, cyclic")
-    parser.add_argument("--eta", type=float, default=0.1, help="ETA value")
-    # # Survival
-    parser.add_argument("--time_col", type=str, default=None, help="")
-    parser.add_argument("--event_col", type=str, default=None, help="")
-    parser.add_argument("--accumulative_pattern_col", type=str, default=None, help="")
-    parser.add_argument("--negative_duration_strategy", type=str, default="clip", help="")
+    add_common_args(parser)
+    add_client_only_args(parser)
+    add_random_forest_args(parser)
+    add_xgb_args(parser)
+    add_linear_model_args(parser)
+    add_nn_args(parser)
+    add_survival_args(parser)
 
     args = parser.parse_args()
     config = vars(args)
+    warn_unused_args(config, config["model"], CLIENT_MODEL_GROUPS)
     try:
         config = CheckClientConfig(config)
     except Exception as e:

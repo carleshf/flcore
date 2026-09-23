@@ -1,0 +1,32 @@
+{
+  "model": "nn",
+  "rounds": [
+    {
+      "eval_metrics": {
+        "accuracy": 0.6875,
+        "balanced_accuracy": 0.6870629489421844,
+        "f1": 0.6478261053562164,
+        "precision": 0.7333333492279053,
+        "recall": 0.5804196000099182,
+        "specificity": 0.7937062978744507
+      },
+      "fit_metrics": {},
+      "loss": 0.6636885106563568,
+      "round": 1
+    },
+    {
+      "eval_metrics": {
+        "accuracy": 0.7083333134651184,
+        "balanced_accuracy": 0.7097902297973633,
+        "f1": 0.649122804403305,
+        "precision": 0.8125,
+        "recall": 0.5419580638408661,
+        "specificity": 0.8776223957538605
+      },
+      "fit_metrics": {},
+      "loss": 0.643203983704249,
+      "round": 2
+    }
+  ],
+  "task": "classification"
+}
