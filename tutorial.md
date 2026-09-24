@@ -58,7 +58,7 @@ Linear Models / SVR
 Random Forest
 ￼| Argument                 | Type | Default         | Description                    |
 | ------------------------ | ---- | --------------- | ------------------------------ |
-| `--balanced`             | str  | "True"          | Balanced class weights         |
+| `--balanced` / `--no-balanced` | flag | true (balanced) | Balanced class weights   |
 | `--n_estimators`         | int  | 100             | Number of trees                |
 | `--max_depth`            | int  | 2               | Maximum tree depth             |
 | `--class_weight`         | str  | "balanced"      | Class weight strategy          |

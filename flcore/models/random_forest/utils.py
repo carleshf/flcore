@@ -24,7 +24,7 @@ from typing import cast
 def get_model(config):
     if config["task"] == "classification":
         # ESTOS DOS CASOS YA CUBREN RANDOM FOREST BALANCEADO,
-        if str(config["balanced"]).lower() == "true":
+        if config["balanced"]:
             model = BalancedRandomForestClassifier(
                 n_estimators=config["n_estimators"],
                 random_state=config["seed"])

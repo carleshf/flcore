@@ -46,7 +46,7 @@ def get_server_and_strategy(config):
         on_fit_config_fn      = fit_round
     )
 
-    filename = 'server_results.txt'
+    filename = config["experiment_dir"] / 'server_results.txt'
     with open(
     filename,
     "a",

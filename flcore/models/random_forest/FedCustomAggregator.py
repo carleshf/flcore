@@ -71,7 +71,7 @@ class FedCustom(BaseFLStrategy):
         print(f"Elapsed time: {elapsed_time} for round {server_round}")
         metrics_aggregated["training_time [s]"] = self.accum_time
 
-        with open("server_results.txt", "a") as f:
+        with open(self.config["experiment_dir"] / "server_results.txt", "a") as f:
             f.write(f"Accumulated Time: {self.accum_time} for round {server_round}\n")
 
         return parameters, metrics_aggregated

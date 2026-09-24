@@ -75,7 +75,13 @@ def add_client_only_args(parser: argparse.ArgumentParser) -> None:
 
 
 def add_random_forest_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--balanced", type=str, default="True", help="Balanced Random Forest: True or False")
+    parser.add_argument(
+        "--balanced",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Balanced Random Forest (random_forest and weighted_random_forest). A real bool, not "
+        "a string -- pass --balanced to enable (the default) or --no-balanced to disable.",
+    )
     parser.add_argument("--n_estimators", type=int, default=100, help="Number of estimators")
     parser.add_argument("--max_depth", type=int, default=2, help="Max depth")
     parser.add_argument("--class_weight", type=str, default="balanced", help="Class weight")
@@ -174,6 +180,18 @@ def _flags_of(add_fn) -> set:
     throwaway = argparse.ArgumentParser(add_help=False)
     add_fn(throwaway)
     return {action.dest for action in throwaway._actions}
+
+
+def _bool_optional_flags_of(add_fn) -> set:
+    """Same idea as _flags_of, but only the flags registered with
+    action=BooleanOptionalAction (e.g. --balanced/--no-balanced) -- callers that
+    reconstruct argv from a config dict (scripts/run_local.py) need to know
+    which bool flags can be explicitly forced False via a --no-<flag> token,
+    unlike a plain store_true flag (--testing_mode, --enable_certs) which can
+    only ever be omitted to mean False and has no negative form."""
+    throwaway = argparse.ArgumentParser(add_help=False)
+    add_fn(throwaway)
+    return {action.dest for action in throwaway._actions if isinstance(action, argparse.BooleanOptionalAction)}
 
 
 def warn_unused_args(config: dict, model: str, model_groups: dict, argv=None) -> None:

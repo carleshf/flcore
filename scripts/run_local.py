@@ -40,12 +40,24 @@ from flcore.cli_args import (  # noqa: E402
     add_server_only_args,
     add_survival_args,
     add_xgb_args,
+    _bool_optional_flags_of,
     _flags_of,
 )
 
 # Mirrors exactly what server_cmd.py / client_cmd.py each register (see
 # flcore/cli_args.py) -- used to split this script's single combined config back
 # into the two entry points' own argv.
+_ALL_GROUPS = (
+    add_common_args,
+    add_server_only_args,
+    add_client_only_args,
+    add_random_forest_args,
+    add_xgb_args,
+    add_cox_args,
+    add_linear_model_args,
+    add_nn_args,
+    add_survival_args,
+)
 _SERVER_GROUPS = (add_server_only_args, add_random_forest_args, add_xgb_args, add_cox_args)
 _CLIENT_GROUPS = (
     add_client_only_args,
@@ -59,6 +71,7 @@ _CLIENT_GROUPS = (
 COMMON_FLAGS = _flags_of(add_common_args)
 SERVER_FLAGS = set().union(*(_flags_of(fn) for fn in _SERVER_GROUPS))
 CLIENT_FLAGS = set().union(*(_flags_of(fn) for fn in _CLIENT_GROUPS))
+BOOLEAN_OPTIONAL_FLAGS = set().union(*(_bool_optional_flags_of(fn) for fn in _ALL_GROUPS))
 
 
 def _config_to_argv(config: dict, flags: set) -> list:
@@ -72,7 +85,13 @@ def _config_to_argv(config: dict, flags: set) -> list:
         value = config[name]
         flag = f"--{name}"
         if isinstance(value, bool):
-            if value:
+            if name in BOOLEAN_OPTIONAL_FLAGS:
+                # Has a --no-<flag> negative form and a default that isn't
+                # necessarily False (e.g. --balanced defaults True) -- omitting
+                # the flag would silently fall back to that default instead of
+                # forcing False, so always state it explicitly either way.
+                argv.append(flag if value else f"--no-{name}")
+            elif value:
                 argv.append(flag)
         elif isinstance(value, list):
             if value:

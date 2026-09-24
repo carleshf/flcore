@@ -38,7 +38,7 @@ def _defaults(sandbox_path: Path) -> dict:
         "metrics_aggregation": "weighted_average",
         "experiment_name": "smoke_test",
         # random forest / weighted random forest
-        "balanced": "True",
+        "balanced": True,
         "n_estimators": 10,
         "max_depth": 2,
         "class_weight": "balanced",

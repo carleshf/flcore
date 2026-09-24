@@ -332,8 +332,7 @@ def CheckServerConfig(config):
 
     # Specific for models:
     if config["model"] == "random_forest":
-        assert isinstance(config['balanced'], str), 'Balanced is a parameter required when random forest model is used '
-        assert config["balanced"].lower() == "true" or config["balanced"].lower() == "false", "Balanced is required to be True or False "
+        assert isinstance(config['balanced'], bool), 'Balanced is a parameter required when random forest model is used '
         assert isinstance(config["task"], str), "Task is a parameter required when random forest model is used"
     """
     Se tendrían que añadir también
