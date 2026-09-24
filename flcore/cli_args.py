@@ -79,8 +79,18 @@ def add_random_forest_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--n_estimators", type=int, default=100, help="Number of estimators")
     parser.add_argument("--max_depth", type=int, default=2, help="Max depth")
     parser.add_argument("--class_weight", type=str, default="balanced", help="Class weight")
-    parser.add_argument("--levelOfDetail", type=str, default="DecisionTree", help="Level of detail")
+    parser.add_argument("--levelOfDetail", type=str, default="DecisionTree", help="Level of detail (weighted_random_forest, client_ensemble mode only)")
     parser.add_argument("--regression_criterion", type=str, default="squared_error", help="Criterion for training")
+    parser.add_argument(
+        "--wrf_aggregation_mode",
+        type=str,
+        default="server_merge",
+        choices=["server_merge", "client_ensemble"],
+        help="weighted_random_forest only: 'server_merge' merges all clients' trees into one "
+        "global forest server-side (like random_forest, default); 'client_ensemble' does no "
+        "server-side merge, broadcasting every client's own model+weight so each client "
+        "locally re-ensembles all of them via weighted majority voting at evaluate() time",
+    )
 
 
 def add_xgb_args(parser: argparse.ArgumentParser) -> None:

@@ -28,26 +28,24 @@ GOLDEN_DIR = Path(__file__).parent / "golden"
 # fixes the underlying bug, this test flips to XPASS and fails until the xfail
 # is removed -- that's the intended "please update this" signal, not a bug in
 # the test. xgb was fixed this session -- see CLAUDE.md Sec 5.10.
-_XFAIL_REASONS = {
-    "weighted_random_forest": "flcore/models/weighted_random_forest/FedCustomAggregator.py::"
-    "aggregate_fit passes a list of per-client (model, num_examples[, weight]) tuples straight to "
-    "serialize_RF, which expects a flat list of independently np.save-able arrays, not tuples of "
-    "mixed objects -- np.save raises ValueError (inhomogeneous shape) regardless of smoothing "
-    "on/off. A real architectural bug in this model's server-side aggregation, not a config-key "
-    "issue (those were fixed this session) -- see CLAUDE.md Sec 5.10.",
-}
+# weighted_random_forest was fixed by the Phase 3 migration (see CLAUDE.md
+# Sec 5.11) -- both its aggregation modes are exercised below, not xfail'd.
+_XFAIL_REASONS = {}
 
 
-def _case(model, task, data_fixture):
+def _case(model, task, data_fixture, golden_name=None, **overrides):
+    golden_name = golden_name or model
     if model in _XFAIL_REASONS:
         return pytest.param(
             model,
             task,
             data_fixture,
+            golden_name,
+            overrides,
             marks=pytest.mark.xfail(reason=_XFAIL_REASONS[model], strict=True),
-            id=model,
+            id=golden_name,
         )
-    return pytest.param(model, task, data_fixture, id=model)
+    return pytest.param(model, task, data_fixture, golden_name, overrides, id=golden_name)
 
 
 # (model key, task, dataset fixture name)
@@ -56,6 +54,13 @@ MODEL_CASES = [
     _case("linear_regression", "regression", "regression_data"),
     _case("random_forest", "classification", "classification_data"),
     _case("weighted_random_forest", "classification", "classification_data"),
+    _case(
+        "weighted_random_forest",
+        "classification",
+        "classification_data",
+        golden_name="weighted_random_forest_client_ensemble",
+        wrf_aggregation_mode="client_ensemble",
+    ),
     _case("xgb", "classification", "classification_data"),
     _case("nn", "classification", "classification_data"),
     _case("cox", "survival", "survival_data"),
@@ -74,8 +79,8 @@ def _to_jsonable(value):
     return repr(value)
 
 
-@pytest.mark.parametrize("model,task,data_fixture", MODEL_CASES)
-def test_model_round_trip(model, task, data_fixture, request, sandbox_path):
+@pytest.mark.parametrize("model,task,data_fixture,golden_name,overrides", MODEL_CASES)
+def test_model_round_trip(model, task, data_fixture, golden_name, overrides, request, sandbox_path):
     data_info = request.getfixturevalue(data_fixture)
 
     config = build_validated_config(
@@ -88,6 +93,7 @@ def test_model_round_trip(model, task, data_fixture, request, sandbox_path):
         time_col=data_info.get("time_col"),
         event_col=data_info.get("event_col"),
         node_name="server",
+        **overrides,
     )
 
     # nn's torch model init + DataLoader shuffling are otherwise unseeded --
@@ -128,4 +134,4 @@ def test_model_round_trip(model, task, data_fixture, request, sandbox_path):
                 for r in result["rounds"]
             ],
         }
-        (GOLDEN_DIR / f"{model}.json").write_text(json.dumps(snapshot, indent=2, sort_keys=True))
+        (GOLDEN_DIR / f"{golden_name}.json").write_text(json.dumps(snapshot, indent=2, sort_keys=True))

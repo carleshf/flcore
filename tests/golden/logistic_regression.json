@@ -31,8 +31,8 @@
           0.0
         ],
         "per client round_time [s]": [
-          0.014461517333984375,
-          0.019886255264282227
+          0.01552271842956543,
+          0.022220611572265625
         ],
         "per client specificity": [
           1.0,
@@ -40,7 +40,7 @@
         ],
         "precision": 0.0,
         "recall": 0.0,
-        "round_time [s]": 0.0171738862991333,
+        "round_time [s]": 0.018871665000915527,
         "specificity": 1.0
       },
       "fit_metrics": {
@@ -103,8 +103,8 @@
           0.9230769276618958
         ],
         "per client running_time": [
-          0.03790163993835449,
-          0.030509233474731445
+          0.042510032653808594,
+          0.03421449661254883
         ],
         "personalized accuracy": 0.7291666865348816,
         "personalized balanced_accuracy": 0.7184315919876099,
@@ -112,8 +112,8 @@
         "personalized precision": 0.737500011920929,
         "personalized recall": 0.6181818246841431,
         "personalized specificity": 0.8186813294887543,
-        "running_time": 0.03420543670654297,
-        "training_time [s]": 0.11760902404785156
+        "running_time": 0.03836226463317871,
+        "training_time [s]": 0.12963175773620605
       },
       "loss": 0.6931471805599453,
       "round": 1
@@ -148,8 +148,8 @@
           0.6363636255264282
         ],
         "per client round_time [s]": [
-          0.01415395736694336,
-          0.014562606811523438
+          0.013921260833740234,
+          0.014075994491577148
         ],
         "per client specificity": [
           0.7857142686843872,
@@ -157,7 +157,7 @@
         ],
         "precision": 0.722222238779068,
         "recall": 0.6181818246841431,
-        "round_time [s]": 0.014358282089233398,
+        "round_time [s]": 0.013998627662658691,
         "specificity": 0.8159340620040894
       },
       "fit_metrics": {
@@ -190,8 +190,8 @@
           0.9230769276618958
         ],
         "per client running_time": [
-          0.01669621467590332,
-          0.016937971115112305
+          0.016298532485961914,
+          0.01601243019104004
         ],
         "personalized accuracy": 0.7291666865348816,
         "personalized balanced_accuracy": 0.7184315919876099,
@@ -199,10 +199,10 @@
         "personalized precision": 0.737500011920929,
         "personalized recall": 0.6181818246841431,
         "personalized specificity": 0.8186813294887543,
-        "running_time": 0.016817092895507812,
-        "training_time [s]": 0.1895582675933838
+        "running_time": 0.016155481338500977,
+        "training_time [s]": 0.19887542724609375
       },
-      "loss": 0.4897215185431321,
+      "loss": 0.48972151854319174,
       "round": 2
     }
   ],

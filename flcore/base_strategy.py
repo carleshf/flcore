@@ -59,12 +59,16 @@ class BaseFLStrategy(fl.server.strategy.FedAvg):
         self.clients_first_round_time: Dict[str, float] = {}
         self.clients_num_examples: Dict[str, int] = {}
 
-    def _aggregator_kwargs(self) -> dict:
+    def _aggregator_kwargs(self, results) -> dict:
         """Extra kwargs to pass to aggregator_cls(models=..., weights=..., ...),
-        beyond models/weights. Override for a model whose Aggregator needs more
-        context (e.g. random_forest's Aggregator needs `config` to build a fresh
-        model shell, plus whatever round-to-round state the Strategy is carrying
-        forward -- see _after_aggregate)."""
+        beyond models/weights. `results` is the same List[(ClientProxy, FitRes)]
+        aggregate_fit received, for a model whose Aggregator needs raw per-client
+        data beyond what models/weights already carry (e.g.
+        weighted_random_forest's broadcast-mode Aggregator needs num_examples
+        alongside each client's model). Override for a model whose Aggregator
+        needs more context (e.g. random_forest's Aggregator needs a model
+        factory to build a fresh model shell, plus whatever round-to-round
+        state the Strategy is carrying forward -- see _after_aggregate)."""
         return {}
 
     def _after_aggregate(self, aggregator) -> None:
@@ -126,7 +130,7 @@ class BaseFLStrategy(fl.server.strategy.FedAvg):
         deserialized = [self.deserialize_fn(fit_res.parameters) for _, fit_res in results]
         weights = self._compute_weights(deserialized, results)
 
-        aggregator = self.aggregator_cls(models=deserialized, weights=weights, **self._aggregator_kwargs())
+        aggregator = self.aggregator_cls(models=deserialized, weights=weights, **self._aggregator_kwargs(results))
         aggregated_params = aggregator.aggregate()
         self._after_aggregate(aggregator)
         parameters_aggregated = self.serialize_fn(aggregated_params)

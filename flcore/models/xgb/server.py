@@ -151,7 +151,7 @@ class FedXgbFullyFederated(BaseFLStrategy):
     # AGGREGATE FIT
     # ------------------------------------------------------
 
-    def _aggregator_kwargs(self) -> dict:
+    def _aggregator_kwargs(self, results) -> dict:
         return {"train_method": self.train_method, "current_model": self.current_model}
 
     def _after_aggregate(self, aggregator) -> None:

@@ -2,6 +2,7 @@ import time
 
 from flcore.base_strategy import BaseFLStrategy
 from flcore.models.random_forest.aggregator import RandomForestAggregator
+from flcore.models.random_forest.utils import get_model
 from flcore.serialization_funs import serialize_RF, deserialize_RF
 
 
@@ -48,9 +49,9 @@ class FedCustom(BaseFLStrategy):
         loss, metrics = eval_res
         return loss, metrics
 
-    def _aggregator_kwargs(self) -> dict:
+    def _aggregator_kwargs(self, results) -> dict:
         return {
-            "config": self.config,
+            "model_factory": lambda: get_model(self.config),
             "previous_estimators": self.server_estimators,
             "previous_estimator_weights": self.server_estimators_weights,
         }

@@ -21,6 +21,7 @@ from sklearn.metrics import log_loss
 import flcore.datasets as datasets
 from flcore.serialization_funs import serialize_RF, deserialize_RF
 import flcore.models.weighted_random_forest.utils as utils
+from flcore.models.weighted_random_forest.aggregator import broadcast_deserialize
 from flcore.performance import measurements_metrics
 from flwr.common import (
     Code,
@@ -101,6 +102,7 @@ class MnistClient(fl.client.Client):
         self.ensamble_tree = []
         self.weight_ensamble_tree = []
         self.levelOfDetail = config['levelOfDetail']
+        self.wrf_aggregation_mode = config.get('wrf_aggregation_mode', 'server_merge')
     def get_parameters(self, ins: GetParametersIns):  # , config type: ignore
         params = utils.get_model_parameters(self.model)
 
@@ -179,9 +181,32 @@ class MnistClient(fl.client.Client):
 
     def evaluate(self, ins: EvaluateIns):  # , parameters, config type: ignore
         try:
-            parameters = ins.parameters
-            #Deserialize to get the real parameters
-            parameters = deserialize_RF(parameters)
+            if self.wrf_aggregation_mode == 'server_merge':
+                # Same shape as random_forest's client: the incoming parameters
+                # are one already server-merged model, used directly.
+                parameters = deserialize_RF(ins.parameters)
+                utils.set_model_params(self.model, parameters)
+                y_pred_prob = self.model.predict_proba(self.X_test)
+                loss = log_loss(self.y_test, y_pred_prob)
+                accuracy,specificity,sensitivity,balanced_accuracy, precision, F1_score = \
+                measurements_metrics(self.model,self.X_test, self.y_test)
+                print(f"Accuracy client in evaluate:  {accuracy}")
+                print(f"Sensitivity client in evaluate:  {sensitivity}")
+                print(f"Specificity client in evaluate:  {specificity}")
+                status = Status(code=Code.OK, message="Success")
+                return EvaluateRes(
+                    status=status,
+                    loss=float(loss),
+                    num_examples=len(self.X_test),
+                    metrics={"accuracy": float(accuracy),"sensitivity":float(sensitivity),"specificity":float(specificity)},
+                )
+
+            # client_ensemble mode: this model's original design -- no
+            # server-side merge, so parameters is the untouched per-client
+            # (model, num_examples, weight) tuple list, deserialized with
+            # broadcast_deserialize (matching what the server's
+            # broadcast_serialize actually encoded) instead of deserialize_RF.
+            parameters = broadcast_deserialize(ins.parameters)
 
             if(self.levelOfDetail == 'DecisionTree'):
                 list_classifiers,weights_classifiers = ensambleDecisionTrees(parameters)

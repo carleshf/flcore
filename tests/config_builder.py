@@ -44,6 +44,7 @@ def _defaults(sandbox_path: Path) -> dict:
         "class_weight": "balanced",
         "levelOfDetail": "DecisionTree",
         "regression_criterion": "squared_error",
+        "wrf_aggregation_mode": "server_merge",
         # xgb
         "booster": "gbtree",
         "tree_method": "hist",

@@ -15,17 +15,23 @@ computeSmoothedWeights(...)") -- both produce the same uniform distribution once
 normalized below, so this is exactly behavior-preserving, unlike linear_models'
 migration (see CLAUDE.md Sec 5.11) where the pre-migration 'None' path used a
 genuinely different (proportional, not uniform) weighting scheme.
+
+model_factory (a zero-arg callable returning a fresh, unfitted model instance)
+is injected rather than importing this package's own get_model directly, so
+weighted_random_forest's server_merge mode (Sec 5.11) can reuse this exact
+pooling/sampling/growth algorithm with its own narrower model factory
+(get_model(bal_RF, random_state), classification-only, no n_estimators/
+max_depth/class_weight knobs) instead of duplicating it.
 """
 import numpy as np
 
 from flcore.base_aggregator import BaseAggregator
-from flcore.models.random_forest.utils import get_model
 
 
 class RandomForestAggregator(BaseAggregator):
-    def __init__(self, models, weights, config, previous_estimators=None, previous_estimator_weights=None):
+    def __init__(self, models, weights, model_factory, previous_estimators=None, previous_estimator_weights=None):
         super().__init__(models=models, weights=weights)
-        self.config = config
+        self.model_factory = model_factory
         self.previous_estimators = previous_estimators
         self.previous_estimator_weights = previous_estimator_weights
         # Populated by aggregate(); BaseFLStrategy._after_aggregate reads these
@@ -34,7 +40,7 @@ class RandomForestAggregator(BaseAggregator):
         self.updated_estimator_weights = None
 
     def aggregate(self):
-        rfa = get_model(self.config)
+        rfa = self.model_factory()
         number_clients = len(self.models)
         # Each self.models[i] is deserialize_RF's result: a 1-element list
         # holding that client's whole fitted RF model object -- sklearn's
