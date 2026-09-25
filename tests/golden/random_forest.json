@@ -39,7 +39,7 @@
         "specificity": 0.74175825715065
       },
       "fit_metrics": {
-        "training_time [s]": 0.22241592407226562
+        "training_time [s]": 0.23263072967529297
       },
       "loss": 0.4488063051744062,
       "round": 1
@@ -82,7 +82,7 @@
         "specificity": 0.8543955981731415
       },
       "fit_metrics": {
-        "training_time [s]": 0.38454341888427734
+        "training_time [s]": 0.40187883377075195
       },
       "loss": 0.4055477673070826,
       "round": 2

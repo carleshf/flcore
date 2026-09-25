@@ -11,8 +11,6 @@ import flcore.models.random_forest as random_forest
 import flcore.models.weighted_random_forest as weighted_random_forest
 import flcore.models.nn as nn
 
-#import flcore.models.logistic_regression.server as logistic_regression_server
-#import flcore.models.logistic_regression.server as logistic_regression_server
 import flcore.models.xgb.server as xgb_server
 import flcore.models.random_forest.server as random_forest_server
 import flcore.models.linear_models.server as linear_models_server

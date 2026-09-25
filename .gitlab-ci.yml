@@ -1,12 +1,13 @@
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
+# Mirrors .github/workflows/python-ci.yml's build/lint/test jobs -- flake8 +
+# pytest via `pip install -e .`, no tox/ruff (this repo never had a tox.ini or
+# ruff config; ruff was never actually installed as a project dependency).
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 stages:
   - build
-  - test
   - lint
+  - test
 
 cache:
   paths:
@@ -17,27 +18,21 @@ before_script:
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
+  - pip install -e .
 
 build:
   stage: build
   script:
     - pip install .
-  artifacts:
-    paths:
-      - build/*
-
-test:
-  stage: test
-  script:
-    - pip install ruff tox
-    # - pip install pytest
-    # - pip install .
-    - tox -e py --verbose
-    # - pytest -vvv
 
 lint:
   stage: lint
   script:
-    - pip install ruff tox
-    - tox -e ruff
-  
+    - pip install flake8
+    - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --max-line-length=88 --extend-ignore=E203,E501
+
+test:
+  stage: test
+  script:
+    - pip install -e .[dev]
+    - pytest tests -W ignore::DeprecationWarning --verbose

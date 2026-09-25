@@ -112,7 +112,7 @@ def add_cox_args(parser: argparse.ArgumentParser) -> None:
 
 def add_linear_model_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--solver", type=str, default="saga", help="Numerical solver of optimization method")
-    parser.add_argument("--l1_ratio", type=str, default=0.5, help="L1-L2 Ratio, necessary for ElasticNet, 0 -> L1 ; 1 -> L2")
+    parser.add_argument("--l1_ratio", type=float, default=0.5, help="L1-L2 Ratio, necessary for ElasticNet, 0 -> L1 ; 1 -> L2")
     parser.add_argument("--max_iter", type=int, default=100000, help="Max iterations of optimizer")
     parser.add_argument("--tol", type=float, default=0.001, help="Gamma for SVR")
     parser.add_argument("--kernel", type=str, default="linear", help="Kernel of SVR")
