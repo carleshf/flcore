@@ -4,9 +4,11 @@ GetModelServerStrategy objects, and drive `num_rounds` of federated training +
 evaluation through the real Strategy/Client code (see fed_driver.py) -- no
 subprocesses, no gRPC, no certs.
 
-This is the safety net later phases (argument standardization, cert/testing-mode
-sanitation, aggregation-strategy homogenization) get regression-tested against.
-Run with `--save-golden` to (re)write the tests/golden/ baseline snapshots.
+Each run's aggregated per-round metrics are compared against the
+tests/golden/<name>.json baseline (wall-clock timing metrics excluded), so a
+change that silently alters what a model learns or how it aggregates fails
+here, not just one that crashes. Run with `--save-golden` to (re)write the
+baselines after an intentional behavior change.
 """
 import json
 from pathlib import Path
@@ -78,6 +80,47 @@ def _to_jsonable(value):
     return repr(value)
 
 
+# Relative/absolute float tolerance for golden comparisons: loose enough to
+# absorb last-bit float noise across CPUs/BLAS builds, tight enough that any
+# real change in training or aggregation shows up.
+GOLDEN_REL_TOL = 1e-6
+GOLDEN_ABS_TOL = 1e-9
+
+
+def _is_timing_key(key):
+    # round_time [s], running_time, training_time [s] and their "per client"
+    # variants: real wall-clock measurements, different on every run.
+    return "time" in key
+
+
+def _golden_diffs(expected, actual, path=""):
+    """Yield (path, expected, actual) for every mismatch, skipping timing keys."""
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        for key in sorted(set(expected) | set(actual)):
+            if _is_timing_key(key):
+                continue
+            if key not in expected or key not in actual:
+                yield f"{path}.{key}", expected.get(key, "<missing>"), actual.get(key, "<missing>")
+            else:
+                yield from _golden_diffs(expected[key], actual[key], f"{path}.{key}")
+    elif isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            yield f"{path} (length)", len(expected), len(actual)
+        else:
+            for i, (e, a) in enumerate(zip(expected, actual)):
+                yield from _golden_diffs(e, a, f"{path}[{i}]")
+    elif (
+        isinstance(expected, (int, float))
+        and isinstance(actual, (int, float))
+        and not isinstance(expected, bool)
+        and not isinstance(actual, bool)
+    ):
+        if actual != pytest.approx(expected, rel=GOLDEN_REL_TOL, abs=GOLDEN_ABS_TOL):
+            yield path, expected, actual
+    elif expected != actual:
+        yield path, expected, actual
+
+
 @pytest.mark.parametrize("model,task,data_fixture,golden_name,overrides", MODEL_CASES)
 def test_model_round_trip(model, task, data_fixture, golden_name, overrides, request, sandbox_path):
     data_info = request.getfixturevalue(data_fixture)
@@ -118,19 +161,34 @@ def test_model_round_trip(model, task, data_fixture, golden_name, overrides, req
         assert not round_info["fit_failures"], round_info["fit_failures"]
         assert not round_info["eval_failures"], round_info["eval_failures"]
 
+    snapshot = {
+        "model": model,
+        "task": task,
+        "rounds": [
+            {
+                "round": r["round"],
+                "fit_metrics": _to_jsonable(r["fit_metrics"]),
+                "loss": _to_jsonable(r["loss"]),
+                "eval_metrics": _to_jsonable(r["eval_metrics"]),
+            }
+            for r in result["rounds"]
+        ],
+    }
+    # Round-trip through JSON so the comparison sees exactly what a saved
+    # baseline would contain (e.g. tuples become lists).
+    snapshot = json.loads(json.dumps(snapshot, sort_keys=True))
+    golden_file = GOLDEN_DIR / f"{golden_name}.json"
+
     if request.config.getoption("--save-golden"):
         GOLDEN_DIR.mkdir(parents=True, exist_ok=True)
-        snapshot = {
-            "model": model,
-            "task": task,
-            "rounds": [
-                {
-                    "round": r["round"],
-                    "fit_metrics": _to_jsonable(r["fit_metrics"]),
-                    "loss": _to_jsonable(r["loss"]),
-                    "eval_metrics": _to_jsonable(r["eval_metrics"]),
-                }
-                for r in result["rounds"]
-            ],
-        }
-        (GOLDEN_DIR / f"{golden_name}.json").write_text(json.dumps(snapshot, indent=2, sort_keys=True))
+        golden_file.write_text(json.dumps(snapshot, indent=2, sort_keys=True))
+        return
+
+    if not golden_file.exists():
+        pytest.fail(f"no golden baseline at {golden_file}; create it with --save-golden")
+    diffs = list(_golden_diffs(json.loads(golden_file.read_text()), snapshot))
+    assert not diffs, (
+        f"{len(diffs)} metric(s) differ from {golden_file.name} "
+        "(re-run with --save-golden if the change is intentional):\n"
+        + "\n".join(f"  {p}: expected {e!r}, got {a!r}" for p, e, a in diffs[:20])
+    )

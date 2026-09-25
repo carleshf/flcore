@@ -20,6 +20,7 @@ Usage:
         --sandbox_path ./sandbox
 """
 import argparse
+import socket
 import subprocess
 import sys
 import time
@@ -99,15 +100,20 @@ def _config_to_argv(config: dict, flags: set) -> list:
     return argv
 
 
-def _wait_until_ready_or_dead(proc, timeout=20):
-    """No clean readiness signal is exposed by server_cmd.py (see
-    tests/test_e2e_local.py), so poll briefly and bail out early -- instead of a
-    blind fixed sleep -- if the server already died."""
+def _wait_until_ready_or_dead(proc, port, timeout=60):
+    """Wait until the server's gRPC port accepts TCP connections (server_cmd.py
+    exposes no other readiness signal), failing fast if the server dies first.
+    If the port never opens within `timeout`, carry on anyway and let the
+    clients' own connection retries decide."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if proc.poll() is not None:
             raise RuntimeError(f"server_cmd.py exited early with code {proc.returncode}")
-        time.sleep(0.5)
+        try:
+            with socket.create_connection(("localhost", port), timeout=0.5):
+                return
+        except OSError:
+            time.sleep(0.5)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -146,7 +152,7 @@ def main():
 
     client_procs = []
     try:
-        _wait_until_ready_or_dead(server)
+        _wait_until_ready_or_dead(server, config["local_port"])
 
         num_clients = config.get("num_clients") or 1
         for i in range(num_clients):

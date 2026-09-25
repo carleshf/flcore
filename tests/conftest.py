@@ -13,8 +13,8 @@ def pytest_addoption(parser):
         "--save-golden",
         action="store_true",
         default=False,
-        help="Write per-model aggregated-metric snapshots to tests/golden/ "
-        "(the Phase-3 regression baseline) instead of only asserting the round completed.",
+        help="Rewrite the per-model aggregated-metric baselines in tests/golden/ "
+        "instead of comparing against them.",
     )
 
 

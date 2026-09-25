@@ -4,6 +4,7 @@ mirroring one command pair from pruebas.md, against the synthetic fixture.
 Complements test_model_smoke.py's in-process tests with a real process/socket
 check that the CLI entry points themselves still work end to end.
 """
+import socket
 import subprocess
 import sys
 import time
@@ -14,15 +15,20 @@ from fixtures.synthetic_dt4h import make_dt4h_fixture
 REPO_ROOT = Path(__file__).parent.parent
 
 
-def _wait_until_ready_or_dead(proc, timeout=20):
-    """No clean readiness signal is exposed by server_cmd.py, so poll briefly and
-    bail out early (instead of a blind fixed sleep) if the server already died."""
+def _wait_until_ready_or_dead(proc, port, timeout=60):
+    """Wait until the server's gRPC port accepts TCP connections (server_cmd.py
+    exposes no other readiness signal), failing fast if the server dies first."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if proc.poll() is not None:
             out, _ = proc.communicate()
             raise RuntimeError(f"server_cmd.py exited early with code {proc.returncode}:\n{out}")
-        time.sleep(0.5)
+        try:
+            with socket.create_connection(("localhost", port), timeout=0.5):
+                return
+        except OSError:
+            time.sleep(0.5)
+    raise RuntimeError(f"server_cmd.py did not open port {port} within {timeout}s")
 
 
 def test_random_forest_e2e_local(tmp_path):
@@ -68,7 +74,7 @@ def test_random_forest_e2e_local(tmp_path):
         server_cmd, cwd=REPO_ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
     try:
-        _wait_until_ready_or_dead(server)
+        _wait_until_ready_or_dead(server, int(port))
         client = subprocess.run(client_cmd, cwd=REPO_ROOT, capture_output=True, text=True, timeout=180)
         server_out, _ = server.communicate(timeout=60)
     finally:

@@ -3,6 +3,8 @@ server_cmd.py/client_cmd.py both build their parsers from, and the
 warn_unused_args() irrelevant-flag warning.
 """
 import argparse
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -21,6 +23,9 @@ from flcore.cli_args import (
     add_xgb_args,
     warn_unused_args,
 )
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+from run_local import _config_to_argv  # noqa: E402
 
 
 def _build_server_parser() -> argparse.ArgumentParser:
@@ -115,3 +120,22 @@ def test_every_server_model_group_name_is_registered(groups):
 def test_every_client_model_group_name_is_registered(groups):
     for group_name in groups:
         assert group_name in MODEL_SPECIFIC_GROUPS
+
+
+@pytest.mark.parametrize("build_parser", [_build_server_parser, _build_client_parser], ids=["server", "client"])
+def test_defaults_survive_argv_round_trip(build_parser):
+    """Every flag's default must parse back to the same value (and type) when
+    passed explicitly on the command line -- which is what scripts/run_local.py
+    always does via _config_to_argv. A flag declared type=str with a numeric
+    default (as --l1_ratio once was) hands the model '0.5' instead of 0.5
+    whenever it's passed explicitly, while in-process tests that never pass it
+    keep seeing the float and stay green."""
+    parser = build_parser()
+    defaults = vars(parser.parse_args([]))
+    reparsed = vars(parser.parse_args(_config_to_argv(defaults, set(defaults))))
+    mismatches = {
+        name: (defaults[name], reparsed[name])
+        for name in defaults
+        if defaults[name] != reparsed[name] or type(defaults[name]) is not type(reparsed[name])
+    }
+    assert not mismatches, f"default -> argv -> parsed changed these flags (default, reparsed): {mismatches}"
