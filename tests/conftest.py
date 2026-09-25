@@ -6,6 +6,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 
 from fixtures.synthetic_dt4h import make_dt4h_fixture, make_survival_fixture  # noqa: E402
+from fixtures.synthetic_eucaim import make_eucaim_fixture  # noqa: E402
 
 
 def pytest_addoption(parser):
@@ -38,3 +39,18 @@ def regression_data(tmp_path):
 @pytest.fixture
 def survival_data(tmp_path):
     return make_survival_fixture(tmp_path / "survival_data")
+
+
+@pytest.fixture
+def eucaim_classification_data(tmp_path):
+    return make_eucaim_fixture(tmp_path / "eucaim_classification_data", task="classification")
+
+
+@pytest.fixture
+def eucaim_regression_data(tmp_path):
+    return make_eucaim_fixture(tmp_path / "eucaim_regression_data", task="regression")
+
+
+@pytest.fixture
+def eucaim_survival_data(tmp_path):
+    return make_eucaim_fixture(tmp_path / "eucaim_survival_data", task="survival")

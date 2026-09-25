@@ -15,12 +15,46 @@
 | Argument                 | Type      | Default           | Description                                   |
 | ------------------------ | --------- | ----------------- | --------------------------------------------- |
 | `--dataset`              | str       | "dt4h_format"     | Dataset loader type                           |
-| `--data_id`              | str       | "data_id.parquet" | Dataset filename                              |
+| `--data_source`          | str       | "dt4h"            | On-disk dataset format: `dt4h` (parquet + `metadata.json`) or `eucaim` (EUCAIM CDM) |
+| `--data_id`              | str       | "data_id.parquet" | Dataset directory                             |
+| `--stats_file`           | str       | None              | `eucaim` only: JSON of agreed per-column normalization stats (see below) |
 | `--normalization_method` | str       | "IQR"             | Normalization method: `IQR`, `MIN_MAX`, `STD` |
 | `--train_labels`         | list[str] | None              | List of feature columns for training          |
 | `--target_labels`        | list[str] | None              | List of target columns (labels)               |
 | `--train_size`           | float     | 0.7               | Fraction for training dataset                 |
 | `--test_size`            | float     | 0.1               | Fraction for testing dataset                  |
+
+EUCAIM CDM datasets (`--data_source eucaim`)
+
+`--data_id` is a EUCAIM CDM dataset root (`clinical_mandatory_view.csv`,
+`imaging_mandatory_view.csv`, `clinical_data/*.csv`), read with
+[eucaim_cdm_reader](https://gitlab.inria.fr/eucaim_inria/eucaim_cdm_reader). If
+`--data_id` doesn't exist as given, it is looked up under `$DATA_PATH`
+(production) or `--data_path`; if `$DATA_PATH` is itself a dataset root, it is
+used directly.
+
+- One row per patient: `clinical_mandatory_view.csv` joined with
+  `clinical_data/patient.csv`. Any of their columns can be used in
+  `--train_labels` / `--target_labels`, e.g. features
+  `cancer_condition_age_at_diagnosis patient_birth_sex cancer_condition_type`
+  and target `patient_deceased`.
+- Column types come from the CDM schema: coded columns are categorical, with the
+  column's full valid code set as categories, so every node encodes them the same
+  way. Values outside the code set are a fatal error (the dataset isn't
+  CDM-conformant). Identifier, date and free-text columns can't be used.
+- Survival: a derived `survival_time_days` column (last contact minus diagnosis
+  date) is available: `--time_col survival_time_days --event_col patient_deceased`.
+- Numeric columns are normalized with statistics computed from each node's local
+  data. To normalize identically everywhere, pass `--stats_file` with agreed
+  values: `{"cancer_condition_age_at_diagnosis": {"q1": 50, "q2": 62, "q3": 71}}`
+  (keys it doesn't set stay local).
+
+```bash
+python client_cmd.py --model random_forest --task classification \
+    --data_source eucaim --data_id /path/to/eucaim_dataset_root \
+    --train_labels cancer_condition_age_at_diagnosis patient_birth_sex cancer_condition_type \
+    --target_labels patient_deceased --sandbox_path ./sandbox --testing_mode
+```
 
 3. Training Variables
 

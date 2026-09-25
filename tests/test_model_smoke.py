@@ -67,6 +67,22 @@ MODEL_CASES = [
     _case("cox", "survival", "survival_data"),
     _case("rsf", "survival", "survival_data"),
     _case("gbs", "survival", "survival_data"),
+    # Same pipeline on a EUCAIM CDM dataset (--data_source eucaim): one model
+    # per aggregation family, all three tasks.
+    *[
+        _case(model, task, f"eucaim_{task}_data", golden_name=f"eucaim_{model}", data_source="eucaim")
+        for model, task in [
+            ("logistic_regression", "classification"),
+            ("linear_regression", "regression"),
+            ("random_forest", "classification"),
+            ("weighted_random_forest", "classification"),
+            ("xgb", "classification"),
+            ("nn", "classification"),
+            ("cox", "survival"),
+            ("rsf", "survival"),
+            ("gbs", "survival"),
+        ]
+    ],
 ]
 
 

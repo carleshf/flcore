@@ -34,8 +34,18 @@ python client_cmd.py --model random_forest --task classification \
 See `tutorial.md` for the full CLI argument reference and `pruebas.md` for one ready-to-run
 command pair per supported model.
 
+Two on-disk dataset formats are supported, selected with `--data_source`: `dt4h` (the default,
+DataTools4Heart / AI4HF: `*.parquet` + `metadata.json`) and `eucaim` (a EUCAIM Common Data Model
+dataset root, read with [eucaim_cdm_reader](https://gitlab.inria.fr/eucaim_inria/eucaim_cdm_reader);
+see `tutorial.md`).
+
 ## Data loader
-To train on your own dataset add a loading method in `flcore/datasets.py` and a corresponding entry
+To support another project's tabular format, add a `DataSource` subclass in `flcore/data_sources/`
+(resolve the dataset path, load a one-row-per-sample table, describe each column's type and
+statistics) and register it in `DATA_SOURCES`; preprocessing, config validation and checkpoint
+metadata then work unchanged.
+
+For other kinds of data, add a loading method in `flcore/datasets.py` and a corresponding entry
 in the `load_dataset()` method.
 
 #### Loading method

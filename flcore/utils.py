@@ -1,6 +1,5 @@
 import os
 import sys
-import glob
 import json
 import numpy as np
 from pathlib import Path
@@ -23,6 +22,7 @@ import flcore.models.gbs.server as gbs_server
 import flcore.models.cox as cox
 import flcore.models.rsf as rsf
 import flcore.models.gbs as gbs
+from flcore.data_sources import OUTCOME, find_spec, get_data_source
 
 linear_models_list = ["logistic_regression", "linear_regression", "lsvc", "svr", "svm",
                       "lasso_regression", "ridge_regression","logistic_regression_elasticnet"]
@@ -169,24 +169,8 @@ def CheckClientConfig(config):
     elif config["model"] in survival_models_list:
         config["dataset"] = "survival"
 
-    est = config["data_id"]
-    id = est.split("/")[-1]
-#    dir_name = os.path.dirname(config["data_id"])
-    dir_name_parent = str(Path(config["data_id"]).parent)
-
-#    config["metadata_file"] = os.path.join(dir_name_parent,"metadata.json")
-    config["metadata_file"] = os.path.join(est,"metadata.json")
-
-    pattern = "*.parquet"
-    parquet_files = glob.glob(os.path.join(est, pattern))
-    # Saniy check, empty list
-    if len(parquet_files) == 0:
-        print("No parquet files found in ",est)
-        sys.exit(1)
-#    config["data_file"] = "/home/jorge/workdir/flcore-suite/dataset/bucarest_sintetico/synthetic_dt4h_dataset.csv"
-
-    # ¿How to choose one of the list?
-    config["data_file"] = parquet_files[-1]
+    data_source = get_data_source(config)
+    data_source.resolve(config)
 
     if len(config["train_labels"]) == 0:
         print("No training labels were provided")
@@ -208,36 +192,15 @@ def CheckClientConfig(config):
         new.append(parsed)
     config["target_labels"] = new
 
-# ____________________________________________________________________
-    with open(config["metadata_file"]) as f:
-        meta = json.load(f)
-
-    entries = meta.get("entries", [])
-    if entries:
-        entry = entries[0]
-        feature_stats = entry["datasetStats"]["featureStats"]
-        outcome_stats = entry["datasetStats"]["outcomeStats"]
-        features_meta = {o["name"]: o for o in entry["features"]}
-        outcomes_meta = {o["name"]: o for o in entry["outcomes"]}
-    else:
-        dataset_stats = meta.get("datasetStats", {})
-        feature_stats = dataset_stats.get("featureStats", {})
-        outcome_stats = dataset_stats.get("outcomeStats", {})
-        features_meta = {o["name"]: o for o in meta.get("features", [])}
-        outcomes_meta = {o["name"]: o for o in meta.get("outcomes", [])}
-# ____________________________________________________________________
+    column_specs = data_source.column_specs(config)
 
     n_out = 0
     for target in config["target_labels"]:
-        if target in outcomes_meta.keys():
-            dtype = outcomes_meta[target]["dataType"]
-            stats = outcome_stats.get(target, {})
-
-        elif target in features_meta.keys():
-            dtype = features_meta[target]["dataType"]
-            stats = feature_stats.get(target, {})
-        else:
-            raise ValueError(f"Target {target} no encontrado en metadata['outcomes']")
+        spec = find_spec(column_specs, target, prefer=OUTCOME)
+        if spec is None:
+            raise ValueError(f"Target {target} not found in the dataset's column descriptions")
+        dtype = spec.dtype
+        stats = spec.stats
 
         if dtype == "BOOLEAN":
             n_out += 1

@@ -20,6 +20,8 @@ from sklearn.utils import shuffle
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
 
+from flcore.data_sources import get_data_source
+
 #from flcore.models.xgb.utils import TreeDataset, do_fl_partitioning, get_dataloader
 
 XY = Tuple[np.ndarray, np.ndarray]
@@ -714,150 +716,54 @@ def load_base(config):
     y_test = data_target[int(dat_len*config["train_size"]):].iloc[:, 0]
     return (X_train, y_train), (X_test, y_test)
 
-def load_dt4h(config):
-    metadata_path = Path(config["metadata_file"])
-    with open(metadata_path) as f:
-        metadata = json.load(f)
-
-    data_file = Path(config["data_file"])
-    dat_ = pd.read_parquet(data_file)
-#    dat = pd.read_csv("/home/jorge/workdir/flcore-suite/dataset/bucarest_sintetico/synthetic_dt4h_dataset.csv")
-
-    dat_len = len(dat_)
-    dat = filter_nans(dat_, config["target_labels"], config["train_labels"])
-# ...................................................................
-    entries = metadata.get("entries", [])
-    if entries:
-        entry = entries[0]
-        features = entry["features"]
-        outcomes = entry["outcomes"]
-        feature_stats = entry["datasetStats"]["featureStats"]
-        outcome_stats = entry["datasetStats"]["outcomeStats"]
-    else:
-        features = metadata.get("features", [])
-        outcomes = metadata.get("outcomes", [])
-        dataset_stats = metadata.get("datasetStats", {})
-        feature_stats = dataset_stats.get("featureStats", {})
-        outcome_stats = dataset_stats.get("outcomeStats", {})
-
+def encode_and_normalize(dat, specs, normalization_method):
+    """Encode categorical columns and normalize numeric ones in place, using
+    each column's precomputed stats from its data source's ColumnSpec:
+    NUMERIC -> IQR ((x - q2) / (q3 - q1)) or MIN_MAX; NOMINAL -> index in the
+    stats' valueSet; BOOLEAN -> 0/1. Columns absent from `dat`, or whose stats
+    report no non-null values, are left untouched."""
     boolean_map = {False: 0, True: 1, "False": 0, "True": 1}
-# ...................................................................
-    n_out = None
 
-    for feat in features:
-
-        name = feat["name"]
-        dtype = feat["dataType"]
-
+    for spec in specs:
+        name = spec.name
         if name not in dat.columns:
             continue
 
-        stats = feature_stats.get(name, {})
-        num_not_null = stats.get("numOfNotNull", 0)
-
-        if num_not_null == 0:
+        stats = spec.stats
+        if stats.get("numOfNotNull", 0) == 0:
             continue
 
-        # -------------------
-        # NUMERIC
-        # -------------------
-        if dtype == "NUMERIC":
+        if spec.dtype == "NUMERIC":
+            if normalization_method == "IQR":
+                dat[name] = iqr_normalize(dat[name], stats.get("q1"), stats.get("q2"), stats.get("q3"))
+            elif normalization_method == "MIN_MAX":
+                dat[name] = min_max_normalize(dat[name], stats.get("min"), stats.get("max"))
 
-            if config["normalization_method"] == "IQR":
-
-                q1 = stats.get("q1")
-                q2 = stats.get("q2")
-                q3 = stats.get("q3")
-
-                dat[name] = iqr_normalize(dat[name], q1, q2, q3)
-
-            elif config["normalization_method"] == "MIN_MAX":
-
-                mini = stats.get("min")
-                maxi = stats.get("max")
-
-                dat[name] = min_max_normalize(dat[name], mini, maxi)
-
-        # -------------------
-        # NOMINAL
-        # -------------------
-        elif dtype == "NOMINAL":
-
+        elif spec.dtype == "NOMINAL":
             value_set = stats.get("valueSet", [])
-
             if len(value_set) > 0:
                 cat_map = {cat: i for i, cat in enumerate(value_set)}
                 dat[name] = dat[name].map(cat_map)
 
-        # -------------------
-        # BOOLEAN
-        # -------------------
-        elif dtype == "BOOLEAN":
-
+        elif spec.dtype == "BOOLEAN":
             dat[name] = dat[name].map(boolean_map)
 
-    for feat in outcomes:
+    return dat
 
-        name = feat["name"]
-        dtype = feat["dataType"]
 
-        if name not in dat.columns:
-            continue
+def load_tabular(config):
+    """Classification/regression loader for any flcore.data_sources source:
+    drop incomplete rows, encode/normalize, shuffle, split by --train_size."""
+    source = get_data_source(config)
+    dat = filter_nans(source.load_table(config), config["target_labels"], config["train_labels"])
+    dat = encode_and_normalize(dat, source.column_specs(config), config["normalization_method"])
 
-        stats = outcome_stats.get(name, {})
-        num_not_null = stats.get("numOfNotNull", 0)
-
-        if num_not_null == 0:
-            continue
-
-        # -------------------
-        # NUMERIC
-        # -------------------
-        if dtype == "NUMERIC":
-
-            if config["normalization_method"] == "IQR":
-
-                q1 = stats.get("q1")
-                q2 = stats.get("q2")
-                q3 = stats.get("q3")
-
-                dat[name] = iqr_normalize(dat[name], q1, q2, q3)
-
-            elif config["normalization_method"] == "MIN_MAX":
-
-                mini = stats.get("min")
-                maxi = stats.get("max")
-
-                dat[name] = min_max_normalize(dat[name], mini, maxi)
-
-        # -------------------
-        # NOMINAL
-        # -------------------
-        elif dtype == "NOMINAL":
-
-            value_set = stats.get("valueSet", [])
-
-            if len(value_set) > 0:
-                cat_map = {cat: i for i, cat in enumerate(value_set)}
-                dat[name] = dat[name].map(cat_map)
-
-        # -------------------
-        # BOOLEAN
-        # -------------------
-        elif dtype == "BOOLEAN":
-
-            dat[name] = dat[name].map(boolean_map)
-
-    # -------------------
-    # Shuffle dataset
-    # -------------------
     dat = dat.sample(frac=1).reset_index(drop=True)
 
     target_labels = config["target_labels"]
     train_labels = config["train_labels"]
 
-    split_idx = int(len(dat) * config["train_size"])   # was: dat_len
-    #split_idx = int(dat_len * config["train_size"])
+    split_idx = int(len(dat) * config["train_size"])
 
     X = dat[train_labels]
     y = dat[target_labels].iloc[:, 0]
@@ -902,8 +808,8 @@ def load_survival(config):
             "You must provide either (--time_col and --event_col) OR --accumulative_pattern_col."
         )
 
-    data_file = Path(config["data_file"])
-    df = pd.read_parquet(data_file)
+    source = get_data_source(config)
+    df = source.load_table(config)
 
     # ----------------------------
     # CASE 1: accumulative horizons
@@ -976,7 +882,14 @@ def load_survival(config):
 
     df = df[[*feature_cols, time_col, event_col]]
 
+    if source.encode_for_survival:
+        feature_specs = [s for s in source.column_specs(config) if s.name in feature_cols]
+        df = encode_and_normalize(df.copy(), feature_specs, config["normalization_method"])
+
     df_clean = df.replace({None: np.nan}).dropna()
+    if df_clean[event_col].dtype == object:
+        # e.g. a boolean column that held missing values before dropna
+        df_clean[event_col] = df_clean[event_col].astype(bool)
 
     strategy = config["negative_duration_strategy"]
 
@@ -1076,7 +989,7 @@ def load_dataset(config, id=None):
         pass
 #        return load_libsvm(config, id)
     elif config["dataset"] == "dt4h_format":
-        return load_dt4h(config)
+        return load_tabular(config)
     elif config["dataset"] == "base_format":
         return load_base(config)
     elif config["dataset"] == "survival":

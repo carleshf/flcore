@@ -16,6 +16,7 @@ from pathlib import Path
 
 from flcore.models.rsf.model import RSFModel
 from flcore.models.rsf.data_formatter import get_numpy
+from flcore.data_sources import build_checkpoint_metadata
 
 
 class FLClient(fl.client.NumPyClient):
@@ -100,52 +101,7 @@ class FLClient(fl.client.NumPyClient):
         model_path = save_path / f"{model_name}_model.pkl"        
         self.model_wrapper.save_model(model_path)
 
-        data_metadata = json.load(open(self.config["metadata_file"], "r"))
-        entity = data_metadata.get("entries", {})[0]
-        features_list = entity.get("features", [])
-        outcomes_list = entity.get("outcomes", [])
-        dataset_stats = entity.get("datasetStats", {})
-        feature_stats = dataset_stats.get("featureStats", {})
-        outcome_stats = dataset_stats.get("outcomeStats", {})
-
-        all_features_meta = {f['name']: f for f in features_list}
-        all_outcomes_meta = {o['name']: o for o in outcomes_list}
-
-        for f_name, f_meta in all_features_meta.items():
-            stats = feature_stats.get(f_name, {})
-            f_meta['stats'] = stats
-
-        for o_name, o_meta in all_outcomes_meta.items():
-            stats = outcome_stats.get(o_name, {})
-            o_meta['stats'] = stats
-
-        features_meta = {}
-        for label in self.config["train_labels"]:
-            if label in all_features_meta:
-                features_meta[label] = all_features_meta[label]
-            elif label in all_outcomes_meta:
-                features_meta[label] = all_outcomes_meta[label]
-
-        outcomes_meta = {}
-        for label in self.config["target_labels"]:
-            if label in all_outcomes_meta:
-                outcomes_meta[label] = all_outcomes_meta[label]
-            elif label in all_features_meta:
-                outcomes_meta[label] = all_features_meta[label]
-
-#>>> features_meta["patient_demographics_age"]["stats"]["min"]
-        metadata = {
-            "node_name": self.config["node_name"],
-            "task": self.config["task"],
-            "n_out": self.config["n_out"],
-            "n_out": self.config["n_feats"],
-            "model_type": self.config["model"],
-            "feature_names": self.config["train_labels"],
-            "target_names":self.config["target_labels"],
-            "metrics": getattr(self, "last_metrics", None),
-            "features_meta": features_meta,
-            "outcomes_meta": outcomes_meta
-        }
+        metadata = build_checkpoint_metadata(self.config, getattr(self, "last_metrics", None))
 
         metadata_path = save_path / f"{model_name}_model_metadata.json"
         with open(metadata_path, "w") as f:

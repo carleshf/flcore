@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from fixtures.synthetic_dt4h import make_dt4h_fixture, make_survival_fixture
+from fixtures.synthetic_eucaim import make_eucaim_fixture
 
 REPO_ROOT = Path(__file__).parent.parent
 
@@ -55,6 +56,21 @@ E2E_CASES = [
          "--dropout_method", "random_dropout", "--dropout_percentage", "50"],
         "random_forest-dropout",
     ),
+    # EUCAIM CDM data through the same CLI path, one model per aggregation family.
+    *[
+        (model, task, ["--data_source", "eucaim"], f"eucaim-{model}")
+        for model, task in [
+            ("logistic_regression", "classification"),
+            ("linear_regression", "regression"),
+            ("random_forest", "classification"),
+            ("weighted_random_forest", "classification"),
+            ("xgb", "classification"),
+            ("nn", "classification"),
+            ("cox", "survival"),
+            ("rsf", "survival"),
+            ("gbs", "survival"),
+        ]
+    ],
 ]
 
 
@@ -71,6 +87,9 @@ def datasets(tmp_path_factory):
         "classification": make_dt4h_fixture(root / "cls", task="classification", n_rows=160),
         "regression": make_dt4h_fixture(root / "reg", task="regression", n_rows=160),
         "survival": make_survival_fixture(root / "surv", n_rows=160),
+        "eucaim-classification": make_eucaim_fixture(root / "eu_cls", task="classification", n_patients=160),
+        "eucaim-regression": make_eucaim_fixture(root / "eu_reg", task="regression", n_patients=160),
+        "eucaim-survival": make_eucaim_fixture(root / "eu_surv", task="survival", n_patients=160),
     }
 
 
@@ -79,7 +98,7 @@ def datasets(tmp_path_factory):
     [pytest.param(m, t, e, id=i or m) for m, t, e, i in E2E_CASES],
 )
 def test_model_runs_end_to_end(model, task, extra, datasets, tmp_path):
-    data = datasets[task]
+    data = datasets[f"eucaim-{task}" if "eucaim" in extra else task]
     sandbox = tmp_path / "sandbox"
     argv = [
         sys.executable, str(REPO_ROOT / "scripts" / "run_local.py"),

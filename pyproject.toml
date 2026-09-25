@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "flcore"
 version = "0.1.0"
-description = "Federated learning model library (Flower wrapper) for DataTools4Heart / AI4HF"
+description = "Federated learning model library (Flower wrapper) for DataTools4Heart / AI4HF and EUCAIM"
 requires-python = ">=3.10"
 dependencies = [
     "flwr==1.25.0",
@@ -26,6 +26,8 @@ dependencies = [
     "scikit-survival==0.22.2",
     "fpboost==0.1.0",
     "setuptools",
+    # EUCAIM CDM reader, pinned to a commit (tarball, so installing needs no git)
+    "eucaim-cdm-reader[ontology] @ https://gitlab.inria.fr/eucaim_inria/eucaim_cdm_reader/-/archive/eef88da615f7da4ce7d11009e05a9759ce7a8ad7/eucaim_cdm_reader-eef88da615f7da4ce7d11009e05a9759ce7a8ad7.tar.gz",
 ]
 
 [project.optional-dependencies]

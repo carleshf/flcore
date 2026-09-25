@@ -1,7 +1,7 @@
 """Synthetic DT4H-format dataset generators for in-process federated smoke tests.
 
-Mirrors the shape flcore/datasets.py::load_dt4h and flcore/datasets.py::load_survival
-(via flcore/utils.py::CheckClientConfig's metadata parsing) expect: a directory
+Mirrors the shape flcore/data_sources/dt4h.py::DT4HSource expects (and so
+flcore/datasets.py::load_tabular / load_survival and CheckClientConfig): a directory
 containing one *.parquet file plus a metadata.json with an `entries[0]` block
 describing each feature/outcome's `dataType` and precomputed stats.
 """

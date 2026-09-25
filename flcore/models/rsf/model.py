@@ -138,7 +138,7 @@ class RSFModel(BaseSurvivalModel):
             c_index = concordance_index_censored(
                 y_test_struct[event_col],
                 y_test_struct[duration_col],
-                -pred_risk
+                pred_risk
             )[0]
         except Exception as e:
             print(f"[RSFModel] Could not compute concordance index: {e}")

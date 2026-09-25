@@ -12,6 +12,8 @@ flags don't apply to the chosen model and will be ignored.
 import argparse
 import sys
 
+from flcore.data_sources import DATA_SOURCES
+
 
 def add_common_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--model", type=str, default=None, help="Model to train")
@@ -61,6 +63,20 @@ def add_client_only_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--data_path", type=str, default="/data", help="Data path")
     parser.add_argument("--dataset", type=str, default="dt4h_format", help="Dataloader to use")
     parser.add_argument("--data_id", type=str, default="data_id.parquet", help="Dataset ID")
+    parser.add_argument(
+        "--data_source",
+        type=str,
+        default="dt4h",
+        choices=sorted(DATA_SOURCES),
+        help="On-disk dataset format --data_id points at (see flcore/data_sources/)",
+    )
+    parser.add_argument(
+        "--stats_file",
+        type=str,
+        default=None,
+        help="eucaim only: JSON with agreed per-column normalization stats, overriding the ones "
+        "computed from local data (see flcore/data_sources/eucaim.py)",
+    )
     parser.add_argument("--normalization_method", type=str, default="IQR", help="Type of normalization: IQR STD MIN_MAX")
     parser.add_argument("--train_labels", type=str, nargs="+", default=[], help="Feature columns for training")
     parser.add_argument("--target_labels", type=str, nargs="+", default=[], help="Target columns")

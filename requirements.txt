@@ -16,3 +16,5 @@ pdfkit==1.0.0
 scikit-survival==0.22.2
 fpboost==0.1.0
 setuptools
+# EUCAIM CDM reader, pinned to a commit (tarball, so installing needs no git)
+eucaim-cdm-reader[ontology] @ https://gitlab.inria.fr/eucaim_inria/eucaim_cdm_reader/-/archive/eef88da615f7da4ce7d11009e05a9759ce7a8ad7/eucaim_cdm_reader-eef88da615f7da4ce7d11009e05a9759ce7a8ad7.tar.gz

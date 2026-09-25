@@ -70,7 +70,7 @@ class GBSModel(BaseSurvivalModel):
         c_index = concordance_index_censored(
             y_test_struct[event_col],
             y_test_struct[duration_col],
-            -pred_risk
+            pred_risk
         )[0]
 
         # Try survival prediction

@@ -60,6 +60,8 @@ def _defaults(sandbox_path: Path) -> dict:
         "certs_path": "/certs",
         "data_path": "",
         "dataset": "dt4h_format",
+        "data_source": "dt4h",
+        "stats_file": None,
         "data_id": "",
         "normalization_method": "IQR",
         "train_labels": [],

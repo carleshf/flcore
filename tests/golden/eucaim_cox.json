@@ -1,0 +1,34 @@
+{
+  "model": "cox",
+  "rounds": [
+    {
+      "eval_metrics": {
+        "AIC": 74.89895834047672,
+        "BIC": 79.77446163994952,
+        "c_index": 0.5876288659793815,
+        "event_rate": 0.48,
+        "mean_risk_score": -0.4876177243341563,
+        "neg_log_likelihood": 33.44947917023836,
+        "permissible_pairs": 194.0
+      },
+      "fit_metrics": {},
+      "loss": 0.41237113402061853,
+      "round": 1
+    },
+    {
+      "eval_metrics": {
+        "AIC": 75.21352466812671,
+        "BIC": 80.0890279675995,
+        "c_index": 0.5824742268041238,
+        "event_rate": 0.48,
+        "mean_risk_score": -0.49212595931949155,
+        "neg_log_likelihood": 33.606762334063355,
+        "permissible_pairs": 194.0
+      },
+      "fit_metrics": {},
+      "loss": 0.41752577319587625,
+      "round": 2
+    }
+  ],
+  "task": "survival"
+}

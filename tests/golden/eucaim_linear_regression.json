@@ -1,0 +1,85 @@
+{
+  "model": "linear_regression",
+  "rounds": [
+    {
+      "eval_metrics": {
+        "mse": 0.7711640894412994,
+        "per client mse": [
+          0.6149492263793945,
+          0.9273789525032043
+        ],
+        "per client n samples": [
+          24,
+          24
+        ],
+        "per client round_time [s]": [
+          0.0013968944549560547,
+          0.001917123794555664
+        ],
+        "round_time [s]": 0.0016570091247558594
+      },
+      "fit_metrics": {
+        "local mse": 0.7747877836227417,
+        "per client local mse": [
+          0.8865527510643005,
+          0.6630228161811829
+        ],
+        "per client n samples": [
+          56,
+          56
+        ],
+        "per client personalized mse": [
+          0.8865527510643005,
+          0.6630228161811829
+        ],
+        "per client running_time": [
+          0.007876873016357422,
+          0.007330417633056641
+        ],
+        "personalized mse": 0.7747877836227417,
+        "running_time": 0.007603645324707031,
+        "training_time [s]": 0.03290438652038574
+      },
+      "loss": 0.7711641015195531,
+      "round": 1
+    },
+    {
+      "eval_metrics": {
+        "mse": 0.7089792788028717,
+        "per client mse": [
+          0.8398480415344238,
+          0.5781105160713196
+        ],
+        "per client n samples": [
+          24,
+          24
+        ],
+        "per client round_time [s]": [
+          0.0014984607696533203,
+          0.0014050006866455078
+        ],
+        "round_time [s]": 0.001451730728149414
+      },
+      "fit_metrics": {
+        "per client n samples": [
+          56,
+          56
+        ],
+        "per client personalized mse": [
+          0.8865527510643005,
+          0.6630228161811829
+        ],
+        "per client running_time": [
+          0.006049394607543945,
+          0.005934715270996094
+        ],
+        "personalized mse": 0.7747877836227417,
+        "running_time": 0.0059920549392700195,
+        "training_time [s]": 0.04790043830871582
+      },
+      "loss": 0.7089792823814833,
+      "round": 2
+    }
+  ],
+  "task": "regression"
+}

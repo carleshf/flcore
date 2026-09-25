@@ -1,0 +1,26 @@
+{
+  "model": "weighted_random_forest",
+  "rounds": [
+    {
+      "eval_metrics": {
+        "accuracy": 0.7291666666666667,
+        "sensitivity": 0.7211538461538461,
+        "specificity": 0.7424242424242424
+      },
+      "fit_metrics": {},
+      "loss": 0.5121721946453625,
+      "round": 1
+    },
+    {
+      "eval_metrics": {
+        "accuracy": 0.7291666666666666,
+        "sensitivity": 0.7211538461538461,
+        "specificity": 0.7462121212121212
+      },
+      "fit_metrics": {},
+      "loss": 0.5128101112179063,
+      "round": 2
+    }
+  ],
+  "task": "classification"
+}
