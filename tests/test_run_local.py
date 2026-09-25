@@ -1,4 +1,4 @@
-"""Regression test for scripts/run_local.py (TODO 2.2): spawns it as a real
+"""Regression test for scripts/run_local.py: spawns it as a real
 subprocess (which itself spawns server_cmd.py + client_cmd.py), against the
 synthetic fixture -- catches issues like the sandbox_path mkdir-ordering bug
 and the --data_id required-check found while building the script.

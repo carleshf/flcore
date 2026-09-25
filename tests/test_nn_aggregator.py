@@ -1,10 +1,10 @@
 """Deterministic regression test for flcore/models/nn/aggregator.py::NNAggregator.
 
-nn's end-to-end smoke test can't reliably golden-diff pre/post migration --
-torch's model init and dataloader shuffling aren't seeded, so even two runs of
-the *same* code produce different losses (confirmed manually while migrating
-nn onto BaseFLStrategy, see CLAUDE.md Sec 5.11). This test instead verifies
-the merge formula itself against fixed inputs, reproducing the exact inline
+When nn was migrated onto BaseFLStrategy, its end-to-end smoke test couldn't
+golden-diff pre/post migration -- torch's model init and dataloader shuffling
+weren't seeded yet (flcore/seeding.py fixes that now), so two runs of the
+*same* code produced different losses. This test verifies the merge formula
+itself against fixed inputs, independent of training-level determinism, reproducing the exact inline
 weighted-average UncertaintyWeightedFedAvg.aggregate_fit used to do by hand
 before the migration (num_examples / (epsilon + entropy) per client, then a
 normalized weighted sum of ndarray layers) -- bit-for-bit, not just "close".

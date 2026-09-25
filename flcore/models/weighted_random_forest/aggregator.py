@@ -8,16 +8,16 @@ config["wrf_aggregation_mode"] (default "server_merge", see flcore/cli_args.py):
   max_depth/class_weight knobs, unlike random_forest's own get_model(config))
   instead of duplicating that algorithm.
 
-- client_ensemble: this model's original design (previously broken -- see
-  CLAUDE.md Sec 5.10). The server does no merge at all: it forwards every
+- client_ensemble: this model's original design (previously broken: aggregate_fit
+  passed the ragged per-client tuple list straight to serialize_RF, which can
+  only np.save flat, independently array-able items). The server does no merge at all: it forwards every
   client's own (model, num_examples, weight) tuple to every client, and each
   client locally re-ensembles all of them via weighted majority voting at
   evaluate() time (flcore/models/weighted_random_forest/client.py::
   ensambleRFTrees / ensambleDecisionTrees + mlxtend.EnsembleVoteClassifier).
   WeightedRandomForestBroadcastAggregator.aggregate() returns that untouched
-  tuple list instead of a merged model -- the "broadcast, don't merge" case
-  the Phase 3 plan anticipated needing new BaseFLStrategy machinery for, which
-  turned out not to be needed: it fits the existing aggregator_cls/serialize_fn
+  tuple list instead of a merged model -- no new BaseFLStrategy machinery
+  needed for "broadcast, don't merge": it fits the existing aggregator_cls/serialize_fn
   contract as-is, just with a different Aggregator and a different codec (see
   broadcast_serialize/broadcast_deserialize below).
 """

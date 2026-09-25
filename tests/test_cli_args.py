@@ -1,6 +1,6 @@
 """Tests for flcore/cli_args.py: the shared argument-group definitions
 server_cmd.py/client_cmd.py both build their parsers from, and the
-warn_unused_args() irrelevant-flag warning (TODO 1.1/1.2/2.5.1).
+warn_unused_args() irrelevant-flag warning.
 """
 import argparse
 
@@ -63,8 +63,8 @@ def test_client_parser_accepts_model(model):
 
 
 def test_server_and_client_agree_on_shared_default_values():
-    """The exact bug class Phase 1 item 1 fixed (task/model/balanced/
-    dropout_method silently disagreeing between the two entry points) -- now
+    """Guards the bug class where task/model/balanced/dropout_method used to
+    silently disagree between the two entry points -- now
     structurally impossible for any flag defined via add_common_args, since
     both parsers call the same function."""
     server_defaults = vars(_build_server_parser().parse_args([]))

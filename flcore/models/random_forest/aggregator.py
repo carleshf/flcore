@@ -12,13 +12,13 @@ Per-client weighting is unchanged: BaseFLStrategy._compute_weights (the
 unmodified default, computeSmoothedWeights) already replaces this model's old
 inline fallback ("if smooth_method == 'None': weights = [1]*num_clients, else
 computeSmoothedWeights(...)") -- both produce the same uniform distribution once
-normalized below, so this is exactly behavior-preserving, unlike linear_models'
-migration (see CLAUDE.md Sec 5.11) where the pre-migration 'None' path used a
+normalized below, so this is exactly behavior-preserving, unlike linear_models,
+whose pre-migration 'None' path used flwr's own proportional aggregate() -- a
 genuinely different (proportional, not uniform) weighting scheme.
 
 model_factory (a zero-arg callable returning a fresh, unfitted model instance)
 is injected rather than importing this package's own get_model directly, so
-weighted_random_forest's server_merge mode (Sec 5.11) can reuse this exact
+weighted_random_forest's server_merge mode can reuse this exact
 pooling/sampling/growth algorithm with its own narrower model factory
 (get_model(bal_RF, random_state), classification-only, no n_estimators/
 max_depth/class_weight knobs) instead of duplicating it.

@@ -7,8 +7,8 @@ configure_evaluate -> client.evaluate -> aggregate_evaluate loop the real Flower
 `Server` runs -- so it exercises the *real* Strategy/Client code
 (flcore/models/<name>/{server,client,FedCustomAggregator}.py), not a mock.
 
-This is the harness Phase 3 (aggregation-strategy homogenization) will use to diff
-before/after outputs per model against tests/golden/.
+tests/test_model_smoke.py uses it to run every model and, with --save-golden,
+snapshot aggregated metrics to tests/golden/ for before/after comparison.
 """
 from typing import List
 

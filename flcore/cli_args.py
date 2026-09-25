@@ -1,6 +1,6 @@
 """Single source of truth for the CLI arguments server_cmd.py and client_cmd.py
 each used to define independently (which is how task/model/balanced/dropout_method
-ended up with mismatched defaults between the two -- see CLAUDE.md Sec 5.4).
+ended up with mismatched defaults between the two).
 
 Arguments are grouped into functions that just call parser.add_argument(...);
 server_cmd.py and client_cmd.py each build their parser by calling the groups

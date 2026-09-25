@@ -27,9 +27,8 @@ GOLDEN_DIR = Path(__file__).parent / "golden"
 # these stay visible and self-documenting. strict=True means the day someone
 # fixes the underlying bug, this test flips to XPASS and fails until the xfail
 # is removed -- that's the intended "please update this" signal, not a bug in
-# the test. xgb was fixed this session -- see CLAUDE.md Sec 5.10.
-# weighted_random_forest was fixed by the Phase 3 migration (see CLAUDE.md
-# Sec 5.11) -- both its aggregation modes are exercised below, not xfail'd.
+# the test. Currently empty: every config below passes, including both
+# weighted_random_forest aggregation modes.
 _XFAIL_REASONS = {}
 
 
@@ -98,7 +97,7 @@ def test_model_round_trip(model, task, data_fixture, golden_name, overrides, req
 
     # nn's torch model init + DataLoader shuffling are otherwise unseeded --
     # without this, two runs of the same code produce different losses, which
-    # makes golden-diffing meaningless (see CLAUDE.md Sec 5.11).
+    # makes golden-diffing meaningless.
     seed_everything(config["seed"])
 
     _, strategy = GetModelServerStrategy(config)

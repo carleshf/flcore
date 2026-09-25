@@ -1,5 +1,5 @@
 """Regression test for the one behavior change flagged while migrating xgb onto
-BaseFLStrategy (see CLAUDE.md Sec 5.11): pre-migration, aggregate_fit hard-stopped
+BaseFLStrategy: pre-migration, aggregate_fit hard-stopped
 the whole round (returned None, {}) if every client submitted empty-bytes params
 in the same round. XGBAggregator now falls back to keeping current_model
 unchanged instead.

@@ -1,9 +1,8 @@
-"""Local test-setup helper (TODO 2.2): spawns one server_cmd.py process +
+"""Local test-setup helper: spawns one server_cmd.py process +
 --num_clients client_cmd.py processes locally, against a real dataset. Replaces
-what the old run.py/server.py/client.py/config.yaml stack used to do (deleted,
-see CLAUDE.md Sec 5.6) -- built on top of the single remaining server_cmd.py/
-client_cmd.py stack, and always CLI-argument-driven, never a config file
-(TODO 2.5.2).
+what the old YAML-config-driven run.py launcher used to do (since deleted) --
+built on top of the server_cmd.py/client_cmd.py stack, and always
+CLI-argument-driven, never a config file.
 
 Always forced into --testing_mode: this is a local dev/testing launcher, not a
 production one, so it connects everything over LOCALHOST rather than reading
@@ -11,8 +10,7 @@ production env vars. --enable_certs still defaults off (pass it explicitly if
 you want to test against real certs locally).
 
 All N client processes currently load the *same* dataset slice (no per-center
-partitioning -- the dt4h_format loader ignores the client id, see
-CLAUDE.md Sec 3.3), so --num_clients > 1 exercises multi-client aggregation
+partitioning -- the dt4h_format loader ignores the client id), so --num_clients > 1 exercises multi-client aggregation
 code paths but not realistic data heterogeneity.
 
 Usage:

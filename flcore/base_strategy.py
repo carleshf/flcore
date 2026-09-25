@@ -1,4 +1,4 @@
-"""Shared Flower Strategy base for the flcore model packages (Phase 3, TODO item 3).
+"""Shared Flower Strategy base for the flcore model packages.
 
 Factors out the two pieces of configure_fit/aggregate_fit boilerplate that used to
 be hand-duplicated (with drift) across each model's own FedCustomAggregator/

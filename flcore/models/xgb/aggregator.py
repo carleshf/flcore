@@ -7,7 +7,7 @@ client contributions at all -- bagging appends each client's trees onto a
 running combined model, cyclic just replaces it -- so self.weights (computed
 by BaseFLStrategy._compute_weights, computeSmoothedWeights by default) is
 accepted for interface consistency but never read, same as rsf/gbs's
-aggregators (see CLAUDE.md Sec 5.11).
+aggregators.
 """
 import json
 
